@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #F7F8FA;
+  --surface: #FFFFFF;
+  --line: rgba(15, 20, 30, 0.08);
+  --text: #0F1420;
+  --text-dim: #6B7280;
+  --primary: #3B5BFF;
+  --primary-soft: #2A46E0;
+  --accent: #C9911F;
+  --accent-light: #E8C572;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, h3, .display {
+  font-family: 'Poppins', sans-serif;
+}

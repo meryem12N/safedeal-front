@@ -48,6 +48,13 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function refreshUser() {
+    const data = await authService.getMe();
+    localStorage.setItem('safedeal_user', JSON.stringify(data));
+    setUser(data);
+    return data;
+  }
+
   async function verify2fa(payload) {
     const data = await authService.verify2fa(payload);
     localStorage.setItem('safedeal_token', data.token);
@@ -85,7 +92,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, verify2fa, register, forgotPassword, resetPassword, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, verify2fa, register, forgotPassword, resetPassword, logout, refreshUser, setUser }}>
       {children}
     </AuthContext.Provider>
   );

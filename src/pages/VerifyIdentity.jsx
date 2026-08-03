@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import * as identityService from '../services/identityService';
+import verifyIdentityIllustration from '../assets/verify-identity-illustration.png';
 import './VerifyIdentity.css';
 
 const STATUS_CONFIG = {
@@ -131,19 +132,25 @@ function VerifyIdentity() {
   return (
     <div className="vid-page">
       <div className="vid-card">
-        <Link to="/" className="vid-brand">
-          <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
-            <path d="M16 2 L28 6.5 V15 C28 22.5 22.8 27.8 16 30 V2 Z" fill="#2A46E0"/>
-            <path d="M16 2 L4 6.5 V15 C4 22.5 9.2 27.8 16 30 V2 Z" fill="#3B5BFF"/>
-            <path d="M9.5 15.5 L14 20 L22.5 10.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span>SafeDeal</span>
-        </Link>
+        <div className="vid-header-row">
+          <div className="vid-header-left">
+            <Link to="/" className="vid-brand">
+              <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+                <path d="M16 2 L28 6.5 V15 C28 22.5 22.8 27.8 16 30 V2 Z" fill="#2A46E0"/>
+                <path d="M16 2 L4 6.5 V15 C4 22.5 9.2 27.8 16 30 V2 Z" fill="#3B5BFF"/>
+                <path d="M9.5 15.5 L14 20 L22.5 10.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>SafeDeal</span>
+            </Link>
 
-        <h1 className="vid-title">Vérification d'identité</h1>
-        <p className="vid-subtitle">
-          Pour créer des transactions en tant que vendeur, votre identité doit être vérifiée.
-        </p>
+            <h1 className="vid-title">Vérification d'identité</h1>
+            <p className="vid-subtitle">
+              Pour créer des transactions en tant que vendeur, votre identité doit être vérifiée.
+            </p>
+          </div>
+
+          <img src={verifyIdentityIllustration} alt="Vérification d'identité" className="vid-header-illustration" />
+        </div>
 
         <div className="vid-status-banner" style={{ borderColor: config.color, background: `${config.color}15` }}>
           <span className="vid-status-icon">{config.icon}</span>

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
+import api from '../services/api';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
+import UserMenu from '../components/UserMenu';
+import SidebarTransactionsMenu from '../components/SidebarTransactionsMenu';
 import { useAuth } from '../context/AuthContext';
 import {
-  IconHome, IconBox, IconWallet, IconDispute, IconProfile,
-  IconSettings, IconLogout, IconSearch, IconBell, IconDollar, IconBag,
-  IconChevronDown, IconMore, IconArrowTrendUp, IconCheck, IconLock,IconTruck, IconPackageBox,
+  IconHome, IconBox, IconWallet, IconDispute, IconProfile, IconSettings, IconLogout,
+  IconSearch, IconBell, IconDollar, IconBag,
+  IconChevronDown, IconMore, IconArrowTrendUp, IconCheck, IconLock, IconTruck, IconPackageBox,
 } from '../components/DashboardIcons';
 import ProductIcon from '../components/ProductIcon';
 import RatingStars from '../components/RatingStars';
@@ -17,6 +20,9 @@ import sacImg from '../assets/products/sac-zara.jpg';
 import ps5Img from '../assets/products/ps5.jpg';
 import MiniCalendar from '../components/MiniCalendar';
 import { useNavigate } from 'react-router-dom';
+import NotificationsPanel from '../components/NotificationsPanel';
+
+
 
 function Sparkline({ data, color }) {
   return (
@@ -118,12 +124,10 @@ function VendorTrackingSteps({ currentStep }) {
   );
 }
 const NAV_ITEMS = [
-  { Icon: IconHome, active: true, label: 'Dashboard' },
-  { Icon: IconBox, label: 'Transactions' },
-  { Icon: IconWallet, label: 'Finance' },
-  { Icon: IconDispute, label: 'Litiges' },
-  { Icon: IconProfile, label: 'Profil' },
-  { Icon: IconSettings, label: 'Paramètres' },
+  { Icon: IconHome, active: true, label: 'Dashboard', path: '/dashboard/vendor' },
+  
+  { Icon: IconWallet, label: 'Finance', path: null },
+  { Icon: IconDispute, label: 'Litiges', path: '/disputes' },
 ];
 
 const STATUS_LABEL = { success: 'Réussi', pending: 'En cours' };
@@ -187,6 +191,11 @@ function VendorDashboard() {
   const [period, setPeriod] = useState('Mois');
   const [transactions, setTransactions] = useState([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [shippingModalTx, setShippingModalTx] = useState(null);
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [carrier, setCarrier] = useState('');
+  const [shippingSubmitting, setShippingSubmitting] = useState(false);
+  const [shippingError, setShippingError] = useState('');
 
   useEffect(() => {
     const t1 = setTimeout(() => setLoading(false), 900);
@@ -225,6 +234,48 @@ function VendorDashboard() {
 
   const firstName = user?.name?.split(' ')[0] || 'Vendeur';
 
+  const openShippingModal = (transaction) => {
+    setShippingModalTx(transaction);
+    setTrackingNumber('');
+    setCarrier('');
+    setShippingError('');
+  };
+
+  const closeShippingModal = () => {
+    setShippingModalTx(null);
+  };
+
+  const handleConfirmShipping = async (event) => {
+    event.preventDefault();
+    setShippingError('');
+
+    if (!trackingNumber.trim()) {
+      setShippingError('Veuillez renseigner un numéro de suivi.');
+      return;
+    }
+
+    setShippingSubmitting(true);
+
+    try {
+      const { data } = await api.post(`/transactions/${shippingModalTx.id}/ship`, {
+        tracking_number: trackingNumber,
+        carrier,
+      });
+
+      setTransactions((current) =>
+        current.map((t) =>
+          t.id === shippingModalTx.id ? { ...t, status: data?.data?.status || 'in_shipping' } : t
+        )
+      );
+      closeShippingModal();
+    } catch (err) {
+      const message = err?.response?.data?.message;
+      setShippingError(message || "Impossible de marquer la transaction comme expédiée pour le moment.");
+    } finally {
+      setShippingSubmitting(false);
+    }
+  };
+
   return (
     <div className={`ud-page ${mounted ? 'ud-mounted' : ''}`}>
       <div className="ud-glow ud-glow-1" />
@@ -242,16 +293,29 @@ function VendorDashboard() {
         </div>
 
         <nav className="ud-nav-full">
-          {NAV_ITEMS.map((item, i) => (
-            <button key={item.label} className={`ud-nav-item-full ${item.active ? 'active' : ''}`} style={{ animationDelay: `${0.1 + i * 0.03}s` }}>
+          <button
+            className="ud-nav-item-full active"
+            style={{ animationDelay: '0.1s' }}
+            onClick={() => navigate('/dashboard/vendor')}
+          >
+            <IconHome /> <span>Dashboard</span>
+          </button>
+          <SidebarTransactionsMenu delay={0.13} />
+          {NAV_ITEMS.slice(1).map((item, i) => (
+            <button
+              key={item.label}
+              className={`ud-nav-item-full ${item.active ? 'active' : ''} ${!item.path ? 'ud-nav-disabled' : ''}`}
+              style={{ animationDelay: `${0.16 + i * 0.03}s` }}
+              onClick={() => item.path && navigate(item.path)}
+              disabled={!item.path}
+            >
               <item.Icon /> <span>{item.label}</span>
             </button>
           ))}
         </nav>
 
-        <button className="ud-nav-item-full ud-logout-full" onClick={logout}>
-          <IconLogout /> <span>Déconnexion</span>
-        </button>
+
+        <UserMenu />
       </aside>
 
       <main className="ud-main-full">
@@ -426,7 +490,7 @@ function VendorDashboard() {
                 <div className="ud-table-card">
                   <div className="ud-table-head-bar">
                     <h3>Transactions récentes</h3>
-                    <span className="ud-see-all-text">Voir tout</span>
+                    <Link to="/transactions" className="ud-see-all-text">Voir tout</Link>
                   </div>
                   {transactionsLoading ? (
                     <div style={{ padding: '20px 0' }}>
@@ -439,7 +503,7 @@ function VendorDashboard() {
                   ) : (
                     <table className="ud-table">
                       <thead>
-                        <tr><th>Produit</th><th>Note</th><th>Montant</th><th>Statut</th><th>Date</th></tr>
+                        <tr><th>Produit</th><th>Note</th><th>Montant</th><th>Statut</th><th>Date</th><th>Action</th></tr>
                       </thead>
                       <tbody>
                         {transactions.map((t, i) => (
@@ -456,6 +520,14 @@ function VendorDashboard() {
                               </span>
                             </td>
                             <td className="ud-td-date">{formatTransactionDate(t.created_at)}</td>
+                            <td>
+                              {t.status === 'payment_received' && (
+                                <button className="ud-ship-btn" type="button" onClick={() => openShippingModal(t)}>
+                                  <IconTruck />
+                                  Marquer comme expédié
+                                </button>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -496,6 +568,66 @@ function VendorDashboard() {
           )}
         </div>
       </main>
+
+      {shippingModalTx && (
+        <div className="ud-modal-overlay" onClick={closeShippingModal}>
+          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ud-modal-head">
+              <span className="ud-modal-icon"><IconTruck /></span>
+              <div>
+                <h3>Marquer comme expédié</h3>
+                <p>{shippingModalTx.title}</p>
+              </div>
+              <button className="ud-modal-close" type="button" onClick={closeShippingModal}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmShipping} className="ud-modal-form">
+              <div className="ud-field-group">
+                <label className="ud-field-label" htmlFor="tracking">Numéro de suivi</label>
+                <div className="ud-input-shell">
+                  <input
+                    id="tracking"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    className="ud-form-input"
+                    placeholder="Ex. AMZ-98231-MA"
+                    disabled={shippingSubmitting}
+                  />
+                </div>
+              </div>
+
+              <div className="ud-field-group">
+                <label className="ud-field-label" htmlFor="carrier">Transporteur (optionnel)</label>
+                <div className="ud-input-shell">
+                  <input
+                    id="carrier"
+                    value={carrier}
+                    onChange={(e) => setCarrier(e.target.value)}
+                    className="ud-form-input"
+                    placeholder="Ex. Amana, CTM, Sud Express..."
+                    disabled={shippingSubmitting}
+                  />
+                </div>
+              </div>
+
+              {shippingError && <div className="ud-form-error">{shippingError}</div>}
+
+              <div className="ud-modal-actions">
+                <button type="button" className="ud-modal-cancel" onClick={closeShippingModal} disabled={shippingSubmitting}>
+                  Annuler
+                </button>
+                <button type="submit" className="ud-new-btn-full ud-form-submit" disabled={shippingSubmitting}>
+                  {shippingSubmitting ? 'Envoi...' : 'Confirmer l\'expédition'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

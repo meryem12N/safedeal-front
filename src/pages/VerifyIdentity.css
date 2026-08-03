@@ -256,3 +256,23 @@
   color: #6B7280;
   line-height: 1.6;
 }
+.vid-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.vid-header-left {
+  flex: 1;
+  min-width: 0;
+}
+.vid-header-illustration {
+  width: 200px;
+  height: auto;
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .vid-header-illustration {
+    display: none;
+  }
+}

@@ -1,0 +1,48 @@
+.dr-buyer-complaint {
+  background: #FDEDED;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.dr-buyer-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.dr-buyer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #E0403F;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dr-buyer-head strong {
+  display: block;
+  font-size: 13.5px;
+  color: #0A0F1E;
+}
+.dr-buyer-category {
+  font-size: 11px;
+  color: #B0201F;
+  font-weight: 600;
+}
+.dr-buyer-text {
+  font-size: 13.5px;
+  color: #4A2C2C;
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+.dr-buyer-note {
+  display: block;
+  font-size: 10.5px;
+  color: #B0201F;
+  opacity: 0.7;
+}

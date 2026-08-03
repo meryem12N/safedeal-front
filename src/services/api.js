@@ -19,11 +19,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isAuthRequest = error.config?.url?.includes('/login') || error.config?.url?.includes('/register');
+    if (error.response?.status === 401 && !isAuthRequest) {
       localStorage.removeItem('safedeal_token');
       localStorage.removeItem('safedeal_user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      if (window.location.pathname !== '/auth') {
+        window.location.href = '/auth?mode=login';
       }
     }
     return Promise.reject(error);

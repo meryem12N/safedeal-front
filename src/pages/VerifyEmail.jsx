@@ -24,7 +24,7 @@ function getStoredUser() {
 
 function VerifyEmail() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -82,8 +82,9 @@ function VerifyEmail() {
     setLoading(true);
     try {
       await verifyEmailCode(code);
-      const role = storedUser?.role || user?.role || 'buyer';
-      navigate(role === 'vendor' ? '/dashboard/vendor' : '/dashboard/buyer');
+      const freshUser = await refreshUser();
+      const role = freshUser?.role || storedUser?.role || user?.role || 'buyer';
+      navigate(role === 'vendor' ? '/verify-identity' : '/dashboard/buyer');
     } catch (err) {
       const message = err?.response?.data?.message || 'Invalid or expired verification code.';
       setError(message);

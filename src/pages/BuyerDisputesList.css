@@ -1,0 +1,199 @@
+/* ===== BuyerDisputesList — thème clair ===== */
+
+.bdl-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bdl-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--bd-card);
+  border: 1px solid var(--bd-border);
+  border-radius: 20px;
+  padding: 20px 24px;
+  opacity: 0;
+  animation: bdFadeUp 0.4s ease forwards;
+  box-shadow: 0 1px 3px rgba(11, 18, 51, 0.04), 0 10px 24px rgba(224, 64, 63, 0.06);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.bdl-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--bd-red), var(--bd-gold));
+}
+
+.bdl-card:hover {
+  box-shadow: 0 1px 3px rgba(11, 18, 51, 0.06), 0 14px 32px rgba(224, 64, 63, 0.12);
+  transform: translateY(-2px);
+}
+
+.bdl-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.bdl-badge-red {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--bd-red), #C13332);
+  box-shadow: 0 8px 18px rgba(224, 64, 63, 0.3);
+}
+
+.bdl-card-left strong {
+  display: block;
+  font-size: 14.5px;
+  color: var(--bd-text);
+  margin-bottom: 3px;
+}
+
+.bdl-card-id {
+  font-size: 11px;
+  color: var(--bd-text-muted);
+}
+
+.bdl-card-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bd-blue-dark);
+  flex: 0 0 140px;
+  text-align: center;
+}
+
+.bdl-card-badge {
+  flex: 0 0 130px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(224, 64, 63, 0.10);
+  color: var(--bd-red);
+  white-space: nowrap;
+}
+
+.bdl-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--bd-blue), var(--bd-blue-dark));
+  color: white;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(61, 107, 255, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bdl-card-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(61, 107, 255, 0.4);
+}
+
+/* ---------- Empty state ---------- */
+
+.bdl-empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  background: var(--bd-card);
+  border: 1px solid var(--bd-border);
+  border-radius: 24px;
+  padding: 64px 32px;
+}
+
+.bdl-empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #E4FBF0, #D4F7E4);
+  color: #0E8F52;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 12px 28px rgba(14, 143, 82, 0.22);
+  position: relative;
+}
+
+.bdl-empty-icon::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 28px;
+  border: 2px dashed rgba(14, 143, 82, 0.2);
+  animation: bdlSpin 20s linear infinite;
+}
+
+@keyframes bdlSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.bdl-empty-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.bdl-empty-card strong {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--bd-text);
+  position: relative;
+}
+
+.bdl-empty-card p {
+  font-size: 13.5px;
+  color: var(--bd-text-secondary);
+  max-width: 380px;
+  line-height: 1.6;
+  margin: 0;
+  position: relative;
+}
+
+@media (max-width: 860px) {
+  .bdl-card {
+    flex-wrap: wrap;
+  }
+  .bdl-card-amount,
+  .bdl-card-badge {
+    text-align: left;
+    flex: auto;
+  }
+}
+
+.bdl-empty-reassure {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: rgba(61, 107, 255, 0.08);
+  color: var(--bd-blue-dark);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.bdl-empty-reassure svg {
+  width: 16px;
+  height: 16px;
+}

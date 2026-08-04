@@ -7,6 +7,7 @@ import {
 } from '../components/DashboardIcons';
 import UserMenu from '../components/UserMenu';
 import NotificationsPanel from '../components/NotificationsPanel';
+
 import {
   trackingOrders,
   balanceData,
@@ -115,9 +116,9 @@ function getCategoryVisual(category) {
 
 const NAV_ITEMS = [
   { Icon: IconHomeSimple, label: 'Tableau de bord', path: '/buyer/dashboard', active: true },
-  { Icon: IconPackage, label: 'Mes achats', path: '/transactions' },
-  { Icon: IconDispute, label: 'Litiges', path: '/disputes' },
-  { Icon: IconSettingsNav, label: 'Paramètres', path: '/settings' },
+  { Icon: IconPackage, label: 'Mes achats', path: '/buyer/transactions' },
+  { Icon: IconDispute, label: 'Litiges', path: '/buyer/disputes' },
+  
 ];
 
 const STEPS = [
@@ -166,7 +167,7 @@ function BuyerDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
+  
 
   useEffect(() => {
     const t1 = setTimeout(() => setLoading(false), 700);
@@ -224,15 +225,11 @@ function BuyerDashboard() {
             <p>Voici où en est votre commande.</p>
           </div>
           <div className="bd-topbar-actions">
-            <button className="bd-icon-btn" aria-label="Notifications" onClick={() => setNotifOpen((v) => !v)}>
-              <IconBell />
-              <span className="bd-notif-dot" />
-            </button>
+            <NotificationsPanel theme="light" />
             <button className="bd-icon-btn" aria-label="Paramètres" onClick={() => navigate('/settings')}>
               <IconSettings />
             </button>
           </div>
-          {notifOpen && <NotificationsPanel onClose={() => setNotifOpen(false)} />}
         </div>
 
         <div className="bd-body">
@@ -284,7 +281,7 @@ function BuyerDashboard() {
               <section className="bd-history">
                 <div className="bd-section-heading">
                   <h3>Commandes récentes</h3>
-                  <button type="button" className="bd-see-all" onClick={() => navigate('/transactions')}>
+                  <button type="button" className="bd-see-all" onClick={() => navigate('/buyer/transactions')}>
                     Voir tout <IconChevronRight />
                   </button>
                 </div>

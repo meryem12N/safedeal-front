@@ -13,11 +13,17 @@ import BuyerDashboard from './pages/BuyerDashboard';
 import NewTransaction from './pages/NewTransaction';
 import PaymentPage from './pages/PaymentPage';
 import TransactionsList from './pages/TransactionsList';
+import BuyerTransactionsList from './pages/BuyerTransactionsList';
+import BuyerDisputesList from './pages/BuyerDisputesList';
+import BuyerDisputeStatus from './pages/BuyerDisputeStatus';
 import DisputeForm from './pages/DisputeForm';
 import DisputesList from './pages/DisputesList';
 import DisputeResponse from './pages/DisputeResponse';
 import Profile from './pages/Profile';
+import ProfileRoute from './pages/ProfileRoute';
+import SettingsRoute from './pages/SettingsRoute';
 import Notifications from './pages/Notifications';
+import BuyerNotifications from './pages/BuyerNotifications';
 
 function App() {
   return (
@@ -59,15 +65,43 @@ function App() {
         />
         <Route path="/dashboard/vendor" element={<VendorDashboard />} />
         <Route path="/dashboard/buyer" element={<BuyerDashboard />} />
+        <Route
+          path="/buyer/transactions"
+          element={
+            <ProtectedRoute>
+              <BuyerTransactionsList />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Page publique — accessible sans connexion, via le lien secure_link */}
         <Route path="/pay/:transactionId" element={<PaymentPage />} />
+        {/* Alias : le backend redirige ici après Stripe (successUrl/cancelUrl) */}
+        <Route path="/transactions/:transactionId" element={<PaymentPage />} />
+        {/* Alias : le backend redirige ici après Stripe (successUrl/cancelUrl) */}
+        <Route path="/transactions/:transactionId" element={<PaymentPage />} />
         <Route path="/dispute/:transactionId" element={<DisputeForm />} />
         <Route
           path="/disputes"
           element={
             <ProtectedRoute>
               <DisputesList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/buyer/disputes"
+          element={
+            <ProtectedRoute>
+              <BuyerDisputesList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/buyer/disputes/:transactionId"
+          element={
+            <ProtectedRoute>
+              <BuyerDisputeStatus />
             </ProtectedRoute>
           }
         />
@@ -83,7 +117,15 @@ function App() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <Profile />
+              <ProfileRoute />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsRoute />
             </ProtectedRoute>
           }
         />
@@ -92,6 +134,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Notifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/buyer/notifications"
+          element={
+            <ProtectedRoute>
+              <BuyerNotifications />
             </ProtectedRoute>
           }
         />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { IconShield, IconLock, IconCheck } from '../components/DashboardIcons';
 import secureDealIllustration from '../assets/payment-shield-illustration.png';
@@ -50,6 +51,10 @@ function getTimelineIndex(status) {
 
 function PaymentPage() {
   const { transactionId } = useParams();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const justPaid = searchParams.get('payment') === 'success';
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -58,6 +63,7 @@ function PaymentPage() {
   const [confirming, setConfirming] = useState(false);
   const [sliderProgress, setSliderProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [showSuccessDetails, setShowSuccessDetails] = useState(true);
 
   useEffect(() => {
     const fetchTransaction = async () => {
@@ -80,9 +86,40 @@ function PaymentPage() {
   }, [transactionId]);
 
   const handlePay = async () => {
+    if (!user) {
+      navigate(`/auth?mode=login&redirect=/pay/${transactionId}`);
+      return;
+    }
+
     setPaying(true);
-    // Placeholder : la route de paiement n'existe pas encore côté backend.
-    setTimeout(() => setPaying(false), 1200);
+    setError('');
+
+    try {
+      // Étape 1 : associer cet acheteur à la transaction via le secure_token de l'URL.
+      await api.post(`/transactions/${transactionId}/claim`);
+
+      // Étape 2 : générer la session Stripe (utilise l'id numérique de la transaction, pas le token).
+      const { data } = await api.post(`/transactions/${transaction.id}/checkout`);
+
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        setError("Impossible de générer le lien de paiement.");
+        setPaying(false);
+      }
+    } catch (err) {
+      const status = err?.response?.status;
+      const message = err?.response?.data?.message;
+
+      if (status === 403) {
+        setError(message || "Vous n'êtes pas autorisé à payer cette transaction.");
+      } else if (status === 422) {
+        setError(message || "Cette transaction ne peut pas être payée dans son état actuel.");
+      } else {
+        setError("Impossible de lancer le paiement pour le moment.");
+      }
+      setPaying(false);
+    }
   };
 
   const handleSliderStart = () => {
@@ -185,8 +222,188 @@ function PaymentPage() {
           </svg>
           <span>SafeDeal</span>
         </div>
+        {justPaid && transaction.status !== 'closed' && (
+          <div className="pp-header-actions">
+            <Link to="/" className="pp-header-home">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                <path d="M4 11.5 12 4l8 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M6 10v9h12v-9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Retour à l'accueil
+            </Link>
+          </div>
+        )}
       </div>
 
+      {justPaid && transaction.status !== 'closed' && (
+        <div className="pp-success2">
+          <div className="pp-success2-badge-wrap">
+            <span className="pp-success2-dot pp-success2-dot-1" />
+            <span className="pp-success2-dot pp-success2-dot-2" />
+            <span className="pp-success2-dot pp-success2-dot-3" />
+            <span className="pp-flash-confetti pp-flash-confetti-1" />
+            <span className="pp-flash-confetti pp-flash-confetti-2" />
+            <span className="pp-flash-confetti pp-flash-confetti-3" />
+            <span className="pp-flash-confetti pp-flash-confetti-4" />
+            <span className="pp-flash-confetti pp-flash-confetti-5" />
+            <span className="pp-flash-confetti pp-flash-confetti-6" />
+            <div className="pp-success2-badge">
+              <svg viewBox="0 0 24 24" width="34" height="34" fill="none">
+                <path d="M8 12.5l2.5 2.5L16 9.5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+
+          <h1 className="pp-success2-title">
+            Paiement <span>sécurisé</span>
+          </h1>
+          <p className="pp-success2-sub">Votre paiement a bien été reçu.</p>
+          <p className="pp-success2-desc">
+            Votre argent est conservé en toute sécurité jusqu'à la confirmation de la livraison.
+          </p>
+
+          <button
+            type="button"
+            className="pp-success2-toggle"
+            onClick={() => setShowSuccessDetails((v) => !v)}
+          >
+            {showSuccessDetails ? 'Masquer les détails' : 'Voir les détails'}
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              fill="none"
+              style={{ transform: showSuccessDetails ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}
+            >
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {showSuccessDetails && (
+            <>
+              <div className="pp-success2-layout">
+                <div className="pp-success2-card">
+                  <div className="pp-success2-card-head">
+                    <span className="pp-success2-check-icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                        <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong>Paiement confirmé</strong>
+                      <p>Votre paiement est sécurisé chez SafeDeal.</p>
+                    </div>
+                    <span className="pp-success2-safe-badge">
+                      <IconShield /> Safe &amp; Secure
+                    </span>
+                  </div>
+
+                  <div className="pp-success2-rows">
+                    <div className="pp-success2-row">
+                      <span className="pp-success2-row-label">
+                        <span className="pp-success2-row-icon pp-success2-row-icon--blue">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                            <path d="M21 8 12 3 3 8v8l9 5 9-5V8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                        Produit
+                      </span>
+                      <strong>{transaction.title}</strong>
+                    </div>
+                    <div className="pp-success2-row">
+                      <span className="pp-success2-row-label">
+                        <span className="pp-success2-row-icon pp-success2-row-icon--green">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                            <ellipse cx="12" cy="6" rx="7" ry="3" stroke="currentColor" strokeWidth="1.8" />
+                            <path d="M5 6v11c0 1.66 3.13 3 7 3s7-1.34 7-3V6" stroke="currentColor" strokeWidth="1.8" />
+                          </svg>
+                        </span>
+                        Montant
+                      </span>
+                      <strong className="pp-success2-amount">{amount} {transaction.currency || 'MAD'}</strong>
+                    </div>
+                    <div className="pp-success2-row">
+                      <span className="pp-success2-row-label">
+                        <span className="pp-success2-row-icon pp-success2-row-icon--purple">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                            <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                        Référence
+                      </span>
+                      <strong>{shortId || `SD-${String(transaction.id).padStart(6, '0')}`}</strong>
+                    </div>
+                    <div className="pp-success2-row">
+                      <span className="pp-success2-row-label">
+                        <span className="pp-success2-row-icon pp-success2-row-icon--gold">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                            <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                            <path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                          </svg>
+                        </span>
+                        Date
+                      </span>
+                      <strong>
+                        {new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date())}
+                      </strong>
+                    </div>
+                    <div className="pp-success2-row">
+                      <span className="pp-success2-row-label">
+                        <span className="pp-success2-row-icon pp-success2-row-icon--blue">
+                          <IconShield />
+                        </span>
+                        Statut
+                      </span>
+                      <span className="pp-success2-status-pill">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none">
+                          <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                          <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.8" />
+                        </svg>
+                        {transaction.status_label || 'En attente de paiement'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pp-success2-side">
+                  <div className="pp-success2-next-card">
+                    <span className="pp-success2-next-icon">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                        <path d="M3 7h11v9H3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                        <path d="M14 10h4l3 3v3h-7z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                    <strong>Prochaine étape</strong>
+                    <p>Le vendeur prépare et expédie votre commande. Vous serez notifié dès son envoi.</p>
+                  </div>
+
+                  <div className="pp-success2-tip">
+                    <span className="pp-success2-tip-icon">💡</span>
+                    <div>
+                      <strong>À savoir</strong>
+                      <p>Vous serez notifiée dès que le vendeur confirmera l'expédition de votre commande.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pp-success2-progress-card">
+                <div className="pp-success2-progress-head">
+                  <span>Étape {currentStepIndex + 1} sur {TIMELINE_STEPS.length}</span>
+                  <strong>{Math.round(((currentStepIndex + 1) / TIMELINE_STEPS.length) * 100)}%</strong>
+                </div>
+                <div className="pp-success2-progress-track">
+                  <div
+                    className="pp-success2-progress-fill"
+                    style={{ width: `${((currentStepIndex + 1) / TIMELINE_STEPS.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              </>
+          )}
+        </div>
+      )}
       {transaction.status === 'closed' ? (
         <div className="pp-success-screen">
           <div className="pp-confetti pp-confetti-1" />
@@ -219,6 +436,7 @@ function PaymentPage() {
           </Link>
         </div>
       ) : (
+      !justPaid && (
       <div className="pp-layout">
         <div className="pp-card pp-card--main">
           <div className="pp-card-glare" />
@@ -285,10 +503,19 @@ function PaymentPage() {
             </button>
           )}
           {transaction.status === 'pending_payment' && (
-            <button className="pp-pay-btn" type="button" onClick={handlePay} disabled={paying}>
-              <IconLock />
-              <span>{paying ? 'Traitement...' : `Payer ${amount} ${transaction.currency || 'DH'}`}</span>
-            </button>
+            <>
+              {error && <p className="pp-pay-error">{error}</p>}
+              <button className="pp-pay-btn" type="button" onClick={handlePay} disabled={paying}>
+                <IconLock />
+                <span>
+                  {paying
+                    ? 'Traitement...'
+                    : !user
+                    ? 'Se connecter pour payer'
+                    : `Payer ${amount} ${transaction.currency || 'DH'}`}
+                </span>
+              </button>
+            </>
           )}
 
           {['in_shipping', 'delivered'].includes(transaction.status) && (
@@ -383,6 +610,7 @@ function PaymentPage() {
           </div>
         </div>
       </div>
+      )
       )}
 
       {transaction.status === 'dispute' && (

@@ -134,11 +134,19 @@ function NewTransaction() {
     }
   };
 
+  
+
+  const getBuyerLink = () => {
+    if (!success) return '';
+    const secureToken = success.secure_link?.split('/').pop();
+    return `${window.location.origin}/pay/${secureToken}`;
+  };
+
   const handleCopyLink = async () => {
-    if (!success?.secure_link) return;
+    if (!success) return;
 
     try {
-      await navigator.clipboard.writeText(success.secure_link);
+      await navigator.clipboard.writeText(getBuyerLink());
       setCopyStatus('Lien copié !');
     } catch {
       setCopyStatus('Copie impossible dans ce navigateur.');
@@ -146,11 +154,11 @@ function NewTransaction() {
   };
 
   const handleShareLink = async () => {
-    if (!success?.secure_link) return;
+    if (!success) return;
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'SafeDeal Maroc', url: success.secure_link });
+        await navigator.share({ title: 'SafeDeal Maroc', url: getBuyerLink() });
       } catch {
         // Partage annulé ou impossible, on ne fait rien.
       }
@@ -251,8 +259,8 @@ function NewTransaction() {
             </div>
           </div>
 
-          <div className={`ud-create-transaction-layout ${step === 2 ? 'nt-layout-full' : ''} ${success?.secure_link ? 'nt-layout-centered' : ''}`}>
-            {!success?.secure_link && (
+          <div className={`ud-create-transaction-layout ${step === 2 ? 'nt-layout-full' : ''} ${success?.id ? 'nt-layout-centered' : ''}`}>
+            {!success?.id && (
             <div className="ud-table-card ud-form-card">
               {step === 1 && (
                 <div className="ud-table-head-bar">
@@ -469,7 +477,7 @@ function NewTransaction() {
                 )}
               </form>
 
-              {!success?.secure_link && (
+              {!success?.id && (
               <div className="nt-bottom-badges nt-bottom-badges--inline">
                 <div className="nt-bottom-badge">
                   <span className="nt-bottom-badge-icon nt-bottom-badge-icon--blue">
@@ -503,7 +511,7 @@ function NewTransaction() {
             </div>
             )}
 
-            {step !== 2 && (success?.secure_link ? (
+            {step !== 2 && (success?.id ? (
               <>
               <div className="ud-table-card ud-success-card">
                 <div className="ud-table-head-bar">
@@ -527,7 +535,7 @@ function NewTransaction() {
                   </p>
 
                   <div className="ud-success-link-wrap">
-                    <span className="ud-success-link">{success.secure_link}</span>
+                    <span className="ud-success-link">{getBuyerLink()}</span>
                     <button className="nt-copy-icon-btn" type="button" onClick={handleCopyLink} aria-label="Copier le lien">
                       <svg viewBox="0 0 24 24" width="15" height="15" fill="none">
                         <rect x="9" y="9" width="12" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.8"/>
@@ -565,7 +573,7 @@ function NewTransaction() {
                 <div className="nt-qr-badge"><IconShield /> SecureDeal</div>
                 <div className="nt-qr-wrap">
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&color=101-26-52&bgcolor=255-255-255&data=${encodeURIComponent(success.secure_link)}`}
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&color=101-26-52&bgcolor=255-255-255&data=${encodeURIComponent(getBuyerLink())}`}
                     alt="QR code du lien sécurisé"
                     className="nt-qr-image"
                   />
@@ -632,7 +640,7 @@ function NewTransaction() {
             ))}
           </div>
 
-          {success?.secure_link && (
+          {success?.id && (
             <div className="nt-next-steps">
               <div className="nt-next-steps-left">
                 <span className="nt-next-steps-icon">

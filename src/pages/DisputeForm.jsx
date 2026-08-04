@@ -111,7 +111,7 @@ function DisputeForm() {
             Votre litige concernant <strong>{transaction.title}</strong> a bien été transmis à notre équipe.
             Nous examinons votre demande et reviendrons vers vous rapidement. Le paiement reste séquestré en toute sécurité jusqu'à résolution.
           </p>
-          <Link to={`/pay/${transactionId}`} className="df-back-btn">Retour à la transaction</Link>
+          <Link to="/dashboard/buyer" className="df-back-btn">Retour au tableau de bord</Link>
         </div>
       </div>
     );

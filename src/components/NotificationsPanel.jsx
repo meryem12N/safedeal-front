@@ -32,13 +32,25 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 const NOTIF_ICON = { payment: IconWallet, dispute: IconDispute, transaction: IconBox };
-const NOTIF_COLOR = {
+
+const NOTIF_COLOR_DARK = {
   payment: { bg: '#062826', color: '#4AE888' },
   dispute: { bg: '#3A1414', color: '#E0403F' },
   transaction: { bg: '#04275A', color: '#4DC3FF' },
 };
 
-function NotificationsPanel() {
+const NOTIF_COLOR_LIGHT = {
+  payment: { bg: 'rgba(22, 179, 104, 0.10)', color: '#16B368' },
+  dispute: { bg: 'rgba(224, 64, 63, 0.10)', color: '#E0403F' },
+  transaction: { bg: 'rgba(61, 107, 255, 0.10)', color: '#3D6BFF' },
+};
+
+function NotificationsPanel({ theme = 'dark' }) {
+  const isLight = theme === 'light';
+  const lightClass = isLight ? ' np-light' : '';
+  const NOTIF_COLOR = isLight ? NOTIF_COLOR_LIGHT : NOTIF_COLOR_DARK;
+  const seeAllPath = isLight ? '/buyer/notifications' : '/notifications';
+
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const [coords, setCoords] = useState({ top: 0, right: 0 });
@@ -77,13 +89,13 @@ function NotificationsPanel() {
 
   return (
     <div className="np-wrap">
-      <button className="ud-icon-btn np-bell-btn" type="button" onClick={toggleOpen} ref={btnRef}>
+      <button className={`np-bell-btn${lightClass}`} type="button" onClick={toggleOpen} ref={btnRef}>
         <IconBell />
         {unreadCount > 0 && <span className="np-badge">{unreadCount}</span>}
       </button>
 
       {open && createPortal(
-        <div className="np-panel" style={{ top: coords.top, right: coords.right }} ref={panelRef}>
+        <div className={`np-panel${lightClass}`} style={{ top: coords.top, right: coords.right }} ref={panelRef}>
           <div className="np-panel-head">
             <strong>Notifications</strong>
             {unreadCount > 0 && (
@@ -117,7 +129,7 @@ function NotificationsPanel() {
             )}
           </div>
 
-          <Link to="/notifications" className="np-see-all" onClick={() => setOpen(false)}>
+          <Link to={seeAllPath} className="np-see-all" onClick={() => setOpen(false)}>
             Voir toutes les notifications
           </Link>
         </div>,

@@ -77,7 +77,7 @@ function VerifyIdentity() {
   useEffect(() => {
     identityService
       .getIdentityStatus()
-      .then((data) => setStatus(data))
+      .then((data) => setStatus({ verification_status: data.status, submitted_at: data.submittedAt }))
       .catch(() => setStatus({ verification_status: 'not_submitted' }))
       .finally(() => setLoadingStatus(false));
   }, []);
@@ -93,14 +93,14 @@ function VerifyIdentity() {
     }
 
     const formData = new FormData();
-    formData.append('id_document', idDocument);
-    formData.append('id_document_type', docType);
-    if (selfie) formData.append('selfie', selfie);
+    formData.append('DocumentFront', idDocument);
+    formData.append('DocumentType', docType);
+    if (selfie) formData.append('Selfie', selfie);
 
     setSubmitting(true);
     try {
       const data = await identityService.submitIdentity(formData);
-      setStatus({ verification_status: data.verification_status || 'pending' });
+      setStatus({ verification_status: data.status || 'pending' });
     } catch (err) {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
@@ -205,8 +205,12 @@ function VerifyIdentity() {
         {currentStatus === 'pending' && (
           <div className="vid-pending-info">
             <p>Votre dossier est en cours d'examen par notre équipe. Cela prend généralement 24 à 48h.</p>
-            <button type="button" className="vid-secondary-btn" onClick={() => navigate('/')}>
-              Retour à l'accueil
+            <button
+              type="button"
+              className="vid-secondary-btn"
+              onClick={() => navigate(user?.role === 'buyer' ? '/dashboard/buyer' : '/dashboard/vendor')}
+            >
+              Retour à mon espace
             </button>
           </div>
         )}
@@ -214,8 +218,12 @@ function VerifyIdentity() {
         {currentStatus === 'approved' && (
           <div className="vid-pending-info">
             <p>Votre identité est vérifiée ! Vous pouvez maintenant créer des transactions.</p>
-            <button type="button" className="vid-submit-btn" onClick={() => navigate('/')}>
-              Continuer
+            <button
+              type="button"
+              className="vid-submit-btn"
+              onClick={() => navigate('/transactions/new')}
+            >
+              Créer une transaction
             </button>
           </div>
         )}

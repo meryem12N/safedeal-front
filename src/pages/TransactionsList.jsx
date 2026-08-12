@@ -120,7 +120,8 @@ function resolveProductCategory(title = '') {
 }
 
 function formatTransactionAmount(amount, currency = 'MAD') {
-  const numericAmount = Number(amount || 0);
+  const normalized = typeof amount === 'string' ? amount.replace(',', '.') : amount;
+  const numericAmount = Number(normalized || 0);
   return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
     currency,
@@ -142,11 +143,24 @@ function TransactionsList() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
+  const [copiedId, setCopiedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const handleCopyLink = async (t) => {
+    const token = t.token || t.id;
+    const link = `${window.location.origin}/pay/${token}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedId(t.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      
+    }
+  };
 
   const firstName = user?.name?.split(' ')[0] || 'Vendeur';
 
@@ -324,8 +338,31 @@ function TransactionsList() {
 
                       <div className="tl-card-date">
                         <span className="tl-card-status-label">Date</span>
-                        <strong>{formatTransactionDate(t.created_at)}</strong>
+                        <strong>{formatTransactionDate(t.createdAt)}</strong>
                       </div>
+
+                      <button
+                        type="button"
+                        className="tl-copy-link-btn"
+                        onClick={() => handleCopyLink(t)}
+                      >
+                        {copiedId === t.id ? (
+                          <>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Copié !
+                          </>
+                        ) : (
+                          <>
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                              <rect x="9" y="9" width="12" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+                              <path d="M6 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V6" stroke="currentColor" strokeWidth="1.8" />
+                            </svg>
+                            Copier le lien
+                          </>
+                        )}
+                      </button>
                     </div>
 
                     {!isSpecial && (

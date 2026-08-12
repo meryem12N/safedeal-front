@@ -138,8 +138,7 @@ function NewTransaction() {
 
   const getBuyerLink = () => {
     if (!success) return '';
-    const secureToken = success.secure_link?.split('/').pop();
-    return `${window.location.origin}/pay/${secureToken}`;
+    return `${window.location.origin}/pay/${success.token}`;
   };
 
   const handleCopyLink = async () => {
@@ -160,7 +159,7 @@ function NewTransaction() {
       try {
         await navigator.share({ title: 'SafeDeal Maroc', url: getBuyerLink() });
       } catch {
-        // Partage annulé ou impossible, on ne fait rien.
+        
       }
     } else {
       handleCopyLink();
@@ -434,7 +433,7 @@ function NewTransaction() {
                           <span className="nt-spinner" />
                           Vérification de votre statut...
                         </div>
-                      ) : identityStatus?.verification_status === 'approved' ? (
+                      ) : identityStatus?.status === 'approved' ? (
                         <div className="nt-identity-line nt-identity-line--ok">
                           <span className="nt-identity-line-icon"><IconCheck /></span>
                           Votre identité est vérifiée, vous pouvez créer cette transaction.
@@ -448,7 +447,7 @@ function NewTransaction() {
                               <circle cx="12" cy="17" r="1" fill="currentColor"/>
                             </svg>
                           </span>
-                          Votre identité n'est pas encore vérifiée ({identityStatus?.verification_status || 'inconnu'}). Vous devez soumettre votre vérification d'identité avant de créer une transaction.
+                          Votre identité n'est pas encore vérifiée ({identityStatus?.status || 'inconnu'}). Vous devez soumettre votre vérification d'identité avant de créer une transaction.
                         </div>
                       )}
                     </div>
@@ -465,7 +464,7 @@ function NewTransaction() {
                       <button
                         className="ud-new-btn-full ud-form-submit"
                         type="submit"
-                        disabled={submitting || identityStatus?.verification_status !== 'approved'}
+                        disabled={submitting || identityStatus?.status !== 'approved'}
                       >
                         <span>{submitting ? 'Création...' : 'Confirmer et générer le lien'}</span>
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none">

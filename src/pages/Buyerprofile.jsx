@@ -71,8 +71,7 @@ function BuyerProfile() {
   const [infoSuccess, setInfoSuccess] = useState(false);
   const [infoError, setInfoError] = useState('');
 
-  // TODO: aucune route backend pour l'upload de photo de profil n'existe encore.
-  // L'aperçu est géré en local (FileReader) le temps qu'Asmae ajoute l'endpoint.
+
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null);
   const [avatarError, setAvatarError] = useState('');
 

@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
 
     authService
       .getMe()
-      .then((data) => setUser(data))
+      .then((data) => setUser(data.user || data))
       .catch(() => {
         localStorage.removeItem('safedeal_token');
         localStorage.removeItem('safedeal_user');
@@ -50,9 +50,10 @@ export function AuthProvider({ children }) {
 
   async function refreshUser() {
     const data = await authService.getMe();
-    localStorage.setItem('safedeal_user', JSON.stringify(data));
-    setUser(data);
-    return data;
+    const userData = data.user || data;
+    localStorage.setItem('safedeal_user', JSON.stringify(userData));
+    setUser(userData);
+    return userData;
   }
 
   async function verify2fa(payload) {

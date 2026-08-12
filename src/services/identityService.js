@@ -1,9 +1,7 @@
 import api from './api';
 
 export async function submitIdentity(formData) {
-  const { data } = await api.post('/verify-identity', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await api.post('/verify-identity', formData);
   return data;
 }
 

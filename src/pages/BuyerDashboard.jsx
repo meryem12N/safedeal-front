@@ -2,17 +2,12 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
-  IconBell, IconSettings, IconChevronDown, IconChevronRight,
+  IconSettings, IconChevronRight,
   IconCheck, IconLock,
 } from '../components/DashboardIcons';
 import UserMenu from '../components/UserMenu';
 import NotificationsPanel from '../components/NotificationsPanel';
-
-import {
-  trackingOrders,
-  balanceData,
-  buyerTransactions,
-} from '../mocks/mockBuyerDashboard';
+import { getTransactions } from '../services/transactionService';
 import './BuyerDashboard.css';
 
 /* ---------- Icônes locales (pas dans DashboardIcons.js) ---------- */
@@ -64,15 +59,6 @@ function IconDispute(props) {
   );
 }
 
-function IconSettingsNav(props) {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" {...props}>
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function IconLaptop(props) {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" {...props}>
@@ -91,34 +77,12 @@ function IconShoe(props) {
   );
 }
 
-function IconHeadphonesSmall(props) {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" {...props}>
-      <path d="M4 14v-2a8 8 0 0 1 16 0v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <rect x="2.5" y="13" width="4" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="17.5" y="13" width="4" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
-}
-
-const CATEGORY_VISUALS = {
-  electronics: { Icon: IconLaptop, gradient: 'bd-badge-blue' },
-  fashion: { Icon: IconShoe, gradient: 'bd-badge-purple' },
-  audio: { Icon: IconHeadphonesSmall, gradient: 'bd-badge-gold' },
-  other: { Icon: IconPackage, gradient: 'bd-badge-blue' },
-};
-
-function getCategoryVisual(category) {
-  return CATEGORY_VISUALS[category] || CATEGORY_VISUALS.other;
-}
-
-/* ---------- Config navigation (simplifiée à 4 items) ---------- */
+/* ---------- Config navigation (simplifiée à 3 items) ---------- */
 
 const NAV_ITEMS = [
-  { Icon: IconHomeSimple, label: 'Tableau de bord', path: '/buyer/dashboard', active: true },
+  { Icon: IconHomeSimple, label: 'Tableau de bord', path: '/dashboard/buyer', active: true },
   { Icon: IconPackage, label: 'Mes achats', path: '/buyer/transactions' },
   { Icon: IconDispute, label: 'Litiges', path: '/buyer/disputes' },
-  
 ];
 
 const STEPS = [
@@ -128,13 +92,64 @@ const STEPS = [
   { key: 'confirmed', label: 'Confirmé', Icon: IconShieldCheck },
 ];
 
-const TX_STATUS_LABEL = { termine: 'Livré', encours: 'En cours', annule: 'Annulé' };
-const TX_STATUS_VARIANT = { termine: 'success', encours: 'pending', annule: 'muted' };
+const STATUS_TO_STEP = {
+  pending_payment: 0,
+  payment_received: 0,
+  in_shipping: 1,
+  delivered: 2,
+  closed: 3,
+};
 
-// Le mock a 5 étapes (0=Payé, 1=Séquestré, 2=Expédié, 3=Livré, 4=Confirmé).
-// On simplifie à 4 étapes visuelles en fusionnant Payé + Séquestré.
-function toUiStep(dataStep) {
-  return Math.max(0, Math.min(3, dataStep - 1));
+const TX_STATUS_LABEL = {
+  pending_payment: 'En attente',
+  payment_received: 'Paiement reçu',
+  in_shipping: 'En livraison',
+  delivered: 'Livré',
+  closed: 'Terminé',
+  cancelled: 'Annulé',
+  dispute: 'Litige',
+  resolved: 'Résolu',
+  refunded: 'Remboursé',
+};
+const TX_STATUS_VARIANT = {
+  pending_payment: 'pending',
+  payment_received: 'pending',
+  in_shipping: 'pending',
+  delivered: 'success',
+  closed: 'success',
+  cancelled: 'muted',
+  dispute: 'muted',
+  resolved: 'success',
+  refunded: 'muted',
+};
+
+function resolveProductCategory(title = '') {
+  const lower = title.toLowerCase();
+  if (lower.includes('iphone') || lower.includes('phone')) return 'phone';
+  if (lower.includes('ps5') || lower.includes('console') || lower.includes('game')) return 'game';
+  if (lower.includes('sac') || lower.includes('bag') || lower.includes('zara')) return 'bag';
+  return 'laptop';
+}
+
+const CATEGORY_VISUALS = {
+  phone: { Icon: IconLaptop, gradient: 'bd-badge-blue' },
+  bag: { Icon: IconShoe, gradient: 'bd-badge-purple' },
+  game: { Icon: IconPackage, gradient: 'bd-badge-gold' },
+  laptop: { Icon: IconLaptop, gradient: 'bd-badge-blue' },
+};
+
+function getCategoryVisual(title) {
+  const category = resolveProductCategory(title);
+  return CATEGORY_VISUALS[category] || CATEGORY_VISUALS.laptop;
+}
+
+function formatAmount(amount, currency = 'MAD') {
+  return new Intl.NumberFormat('fr-MA', { style: 'currency', currency, maximumFractionDigits: 2 }).format(Number(amount || 0));
+}
+
+function formatDate(createdAt) {
+  if (!createdAt) return '—';
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(createdAt));
 }
 
 function SkeletonBlock({ height = 20, radius = 12 }) {
@@ -163,28 +178,40 @@ function TrackingSteps({ currentStep }) {
 }
 
 function BuyerDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
-  
 
   useEffect(() => {
-    const t1 = setTimeout(() => setLoading(false), 700);
-    const t2 = setTimeout(() => setMounted(true), 750);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    let isMounted = true;
+    const fetchTransactions = async () => {
+      try {
+        const response = await getTransactions({ page: 1 });
+        if (isMounted) {
+          setTransactions(Array.isArray(response?.data) ? response.data : []);
+        }
+      } catch {
+        if (isMounted) setTransactions([]);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          setTimeout(() => setMounted(true), 50);
+        }
+      }
+    };
+    fetchTransactions();
+    return () => { isMounted = false; };
   }, []);
 
   const firstName = user?.name?.split(' ')[0] || 'Acheteur';
-  const currentOrder = trackingOrders?.[0];
-  const currentOrderTx = currentOrder
-    ? buyerTransactions.find((t) => t.orderNumber === currentOrder.orderNumber)
-    : null;
-  const categoryByOrderNumber = trackingOrders.reduce((acc, o) => {
-    acc[o.orderNumber] = o.category;
-    return acc;
-  }, {});
-  const recentTransactions = buyerTransactions?.slice(0, 4) || [];
+
+  const activeStatuses = ['pending_payment', 'payment_received', 'in_shipping', 'delivered'];
+  const currentOrder = transactions.find((t) => activeStatuses.includes(t.status)) || null;
+  const recentTransactions = transactions.slice(0, 4);
+
+  const getToken = (t) => (t?.secure_link ? t.secure_link.split('/').pop() : t?.id);
 
   return (
     <div className={`bd-page ${mounted ? 'bd-mounted' : ''}`}>
@@ -233,23 +260,27 @@ function BuyerDashboard() {
         </div>
 
         <div className="bd-body">
-
-          {loading || !currentOrder ? (
+          {loading ? (
             <div className="bd-hero-card">
               <SkeletonBlock height={220} radius={16} />
             </div>
+          ) : !currentOrder ? (
+            <article className="bd-hero-card">
+              <div className="bd-hero-glow" aria-hidden="true" />
+              <p className="bd-empty">Vous n'avez pas encore de commande en cours.</p>
+            </article>
           ) : (
             <>
               <article className="bd-hero-card">
                 <div className="bd-hero-glow" aria-hidden="true" />
                 <div className="bd-hero-top">
                   <div className="bd-hero-product">
-                    <div className={`bd-product-badge ${getCategoryVisual(currentOrder.category).gradient}`}>
-                      {(() => { const V = getCategoryVisual(currentOrder.category); return <V.Icon />; })()}
+                    <div className={`bd-product-badge ${getCategoryVisual(currentOrder.title).gradient}`}>
+                      {(() => { const V = getCategoryVisual(currentOrder.title); return <V.Icon />; })()}
                     </div>
                     <div>
                       <span className="bd-hero-eyebrow">Votre commande</span>
-                      <h2>{currentOrder.name}</h2>
+                      <h2>{currentOrder.title}</h2>
                     </div>
                   </div>
                   <span className="bd-badge-protected">
@@ -257,23 +288,21 @@ function BuyerDashboard() {
                   </span>
                 </div>
 
-                <TrackingSteps currentStep={toUiStep(currentOrder.currentStep)} />
+                <TrackingSteps currentStep={STATUS_TO_STEP[currentOrder.status] ?? 0} />
 
                 <div className="bd-hero-footer">
                   <div className="bd-hero-footer-text">
                     <span className="bd-lock-badge"><IconLock /></span>
-                    <span>
-                      {currentOrderTx ? currentOrderTx.amount.replace('-', '') : 'Montant'} en sécurité, en attente de livraison
-                    </span>
+                    <span>{formatAmount(currentOrder.amount, currentOrder.currency)} en sécurité, en attente de livraison</span>
                   </div>
-                  {currentOrder.currentStep === 3 ? (
-                    <button className="bd-cta-btn" type="button" onClick={() => navigate(`/deliver/${currentOrder.id}`)}>
+                  {currentOrder.status === 'delivered' ? (
+                    <button className="bd-cta-btn" type="button" onClick={() => navigate(`/pay/${getToken(currentOrder)}`)}>
                       Confirmer la réception
                     </button>
                   ) : (
-                    <span className="bd-hero-footer-eta">
-                      Livraison estimée : <strong>{currentOrder.deliveryDate}</strong>
-                    </span>
+                    <button className="bd-cta-btn" type="button" onClick={() => navigate(`/pay/${getToken(currentOrder)}`)}>
+                      Voir le détail
+                    </button>
                   )}
                 </div>
               </article>
@@ -287,35 +316,38 @@ function BuyerDashboard() {
                 </div>
 
                 <div className="bd-history-list">
-                  {recentTransactions.map((tx, i) => (
-                    <div className="bd-history-row" key={tx.id} style={{ animationDelay: `${0.1 + i * 0.06}s` }}>
-                      {(() => {
-                        const visual = getCategoryVisual(categoryByOrderNumber[tx.orderNumber]);
-                        return (
-                          <div className={`bd-product-badge bd-product-badge--sm ${visual.gradient}`}>
-                            <visual.Icon />
-                          </div>
-                        );
-                      })()}
-                      <div className="bd-history-info">
-                        <strong>{tx.merchant}</strong>
-                        <span>Commande #{tx.orderNumber}</span>
-                      </div>
-                      <span className={`bd-status-pill bd-status-pill--${TX_STATUS_VARIANT[tx.status] || 'muted'}`}>
-                        {TX_STATUS_LABEL[tx.status] || tx.status}
-                      </span>
-                      <time>{tx.date}</time>
-                      <strong className="bd-history-amount">{tx.amount}</strong>
-                      <button
-                        type="button"
-                        className="bd-history-details"
-                        aria-label={`Détails de ${tx.merchant}`}
-                        onClick={() => navigate(`/transactions/${tx.id}`)}
+                  {recentTransactions.map((tx, i) => {
+                    const visual = getCategoryVisual(tx.title);
+                    return (
+                      <div
+                        className="bd-history-row"
+                        key={tx.id}
+                        style={{ animationDelay: `${0.1 + i * 0.06}s`, cursor: 'pointer' }}
+                        onClick={() => navigate(`/pay/${getToken(tx)}`)}
                       >
-                        <IconChevronRight />
-                      </button>
-                    </div>
-                  ))}
+                        <div className={`bd-product-badge bd-product-badge--sm ${visual.gradient}`}>
+                          <visual.Icon />
+                        </div>
+                        <div className="bd-history-info">
+                          <strong>{tx.title}</strong>
+                          <span>{tx.vendor?.name || 'Vendeur'}</span>
+                        </div>
+                        <span className={`bd-status-pill bd-status-pill--${TX_STATUS_VARIANT[tx.status] || 'pending'}`}>
+                          {TX_STATUS_LABEL[tx.status] || tx.status}
+                        </span>
+                        <time>{formatDate(tx.created_at)}</time>
+                        <strong className="bd-history-amount">{formatAmount(tx.amount, tx.currency)}</strong>
+                        <button
+                          type="button"
+                          className="bd-history-details"
+                          aria-label={`Détails de ${tx.title}`}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/pay/${getToken(tx)}`); }}
+                        >
+                          <IconChevronRight />
+                        </button>
+                      </div>
+                    );
+                  })}
 
                   {recentTransactions.length === 0 && (
                     <p className="bd-empty">Vous n'avez pas encore de commande.</p>

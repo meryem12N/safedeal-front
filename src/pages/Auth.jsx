@@ -92,7 +92,7 @@ function Auth() {
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({
-    name: '', email: '', phone: '', password: '', password_confirmation: '', role: 'vendor',
+    name: '', email: '', phone: '', password: '', passwordConfirmation: '', role: 'vendor',
   });
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
@@ -127,7 +127,9 @@ function Auth() {
         navigate('/verify-email');
       } else {
         const role = data.user?.role;
-        navigate(role === 'buyer' ? '/dashboard/buyer' : '/dashboard/vendor');
+        console.log('ROLE REÇU:', role, typeof role);
+        if (role === 'Admin' || role === 'admin') navigate('/admin/dashboard');
+        else navigate(role === 'buyer' ? '/dashboard/buyer' : '/dashboard/vendor');
       }
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.email_verified === false) {
@@ -149,7 +151,8 @@ function Auth() {
     try {
       const data = await verify2fa({ email: pendingEmail, code: code2fa });
       const role = data.user?.role;
-      navigate(role === 'buyer' ? '/dashboard/buyer' : '/dashboard/vendor');
+      if (role === 'Admin' || role === 'admin') navigate('/admin/dashboard');
+      else navigate(role === 'buyer' ? '/dashboard/buyer' : '/dashboard/vendor');
     } catch (err) {
       if (err.response?.status === 429) setGeneralError('Trop de tentatives. Demandez un nouveau code.');
       else setGeneralError('Code incorrect ou expiré.');
@@ -261,13 +264,13 @@ function Auth() {
 
               <LabeledField
                 label="Confirmer le mot de passe"
-                state={fieldState(registerForm.password_confirmation, registerForm.password_confirmation === registerForm.password && registerForm.password_confirmation.length > 0)}
+                state={fieldState(registerForm.passwordConfirmation, registerForm.passwordConfirmation === registerForm.password && registerForm.passwordConfirmation.length > 0)}
               >
                 <input
                   type={showRegPw2 ? 'text' : 'password'}
                   placeholder="••••••••"
-                  value={registerForm.password_confirmation}
-                  onChange={(e) => setRegisterForm({ ...registerForm, password_confirmation: e.target.value })}
+                  value={registerForm.passwordConfirmation}
+                  onChange={(e) => setRegisterForm({ ...registerForm, passwordConfirmation: e.target.value })}
                   required
                 />
                 <button type="button" className="lf-toggle" onClick={() => setShowRegPw2(!showRegPw2)}>

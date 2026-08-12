@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import { IconProfile, IconSettings, IconLogout } from './DashboardIcons';
 import './UserMenu.css';
 
-function UserMenu({ theme = 'dark' }) {
+function UserMenu({ theme = 'dark', roleOverride = null }) {
   const { user, logout } = useAuth();
-  const lightClass = theme === 'light' ? ' um-light' : '';
+  const themeClass = theme === 'light' ? ' um-light' : theme === 'admin' ? ' um-admin' : '';
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState({ bottom: 0, left: 0, width: 0 });
@@ -48,11 +48,11 @@ function UserMenu({ theme = 'dark' }) {
 
   return (
     <div className="um-wrap">
-      <button className={`ud-nav-item-full um-trigger${lightClass}`} type="button" onClick={toggleOpen} ref={btnRef}>
+      <button className={`ud-nav-item-full um-trigger${themeClass}`} type="button" onClick={toggleOpen} ref={btnRef}>
         <span className="um-avatar">{initials}</span>
         <span className="um-info">
           <strong>{user?.name || 'Utilisateur'}</strong>
-          <small>{user?.role === 'vendor' ? 'Vendeur' : 'Acheteur'}</small>
+          <small>{roleOverride || (user?.role === 'vendor' ? 'Vendeur' : 'Acheteur')}</small>
         </span>
         <svg className="um-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none">
           <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -61,7 +61,7 @@ function UserMenu({ theme = 'dark' }) {
 
       {open && createPortal(
         <div
-          className={`um-menu${lightClass}`}
+          className={`um-menu${themeClass}`}
           style={{ bottom: coords.bottom, left: coords.left, width: coords.width }}
           ref={menuRef}
         >

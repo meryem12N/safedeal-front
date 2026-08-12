@@ -95,10 +95,8 @@ function PaymentPage() {
     setError('');
 
     try {
-      // Étape 1 : associer cet acheteur à la transaction via le secure_token de l'URL.
       await api.post(`/transactions/${transactionId}/claim`);
 
-      // Étape 2 : générer la session Stripe (utilise l'id numérique de la transaction, pas le token).
       const { data } = await api.post(`/transactions/${transaction.id}/checkout`);
 
       if (data?.checkout_url) {
@@ -152,13 +150,17 @@ function PaymentPage() {
 
   const handleConfirmReceipt = async () => {
     setConfirming(true);
+    setError('');
     try {
-      const { data } = await api.post(`/transactions/${transaction.id}/deliver`);
-      setTransaction(data?.data || { ...transaction, status: 'delivered' });
+      await api.post(`/transactions/${transaction.id}/deliver`);
+      // Confirmation de réception = déclenchement immédiat de la libération des fonds.
+      const { data } = await api.post(`/transactions/${transaction.id}/close`);
+      setTransaction(data?.data || { ...transaction, status: 'closed' });
       setShowConfirmModal(false);
     } catch (err) {
       const message = err?.response?.data?.message;
-      setFormError?.(message);
+      setError(message || "Impossible de confirmer la réception pour le moment.");
+      setShowConfirmModal(false);
     } finally {
       setConfirming(false);
     }
@@ -197,7 +199,8 @@ function PaymentPage() {
     );
   }
 
-  const amount = Number(transaction.amount).toLocaleString('fr-FR', {
+  const normalizedAmount = typeof transaction.amount === 'string' ? transaction.amount.replace(',', '.') : transaction.amount;
+  const amount = Number(normalizedAmount).toLocaleString('fr-FR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

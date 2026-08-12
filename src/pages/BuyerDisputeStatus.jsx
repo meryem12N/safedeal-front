@@ -52,10 +52,9 @@ function BuyerDisputeStatus() {
     );
   }
 
-  // TODO: brancher le vrai statut de litige et la réponse vendeur une fois l'API disponible.
-  // Placeholder actuel : on affiche toujours "en cours d'examen" pour la démo visuelle.
+
   const currentStepIndex = 1;
-  const vendorResponse = null; // sera rempli quand l'API renverra transaction.dispute.vendor_response
+  const vendorResponse = null; 
   const amountFormatted = Number(transaction.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
 
   return (

@@ -1,8 +1,21 @@
 .dr-buyer-complaint {
-  background: #FDEDED;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #FDEDED, #FBE0E0);
+  border: 1px solid rgba(224, 64, 63, 0.15);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 24px;
+}
+
+.dr-buyer-complaint::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #E0403F, #C13332);
 }
 .dr-buyer-head {
   display: flex;
@@ -11,10 +24,10 @@
   margin-bottom: 12px;
 }
 .dr-buyer-avatar {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: #E0403F;
+  background: linear-gradient(135deg, #E0403F, #C13332);
   color: #FFFFFF;
   font-size: 14px;
   font-weight: 700;
@@ -22,6 +35,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(224, 64, 63, 0.3);
 }
 .dr-buyer-head strong {
   display: block;

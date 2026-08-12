@@ -93,8 +93,8 @@ function ResetPassword() {
                   <input
                     type="password"
                     placeholder="••••••••"
-                    value={form.password_confirmation}
-                    onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })}
+                    value={form.passwordConfirmation}
+                    onChange={(e) => setForm({ ...form, passwordConfirmation: e.target.value })}
                     required
                   />
                 </div>

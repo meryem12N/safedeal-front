@@ -9,7 +9,7 @@ export default function RequireVerifiedIdentity({ children }) {
   }
 
   // Seuls les vendeurs doivent avoir une identité vérifiée pour créer une transaction.
-  if (user?.role === 'vendor' && user?.identity_status !== 'approved') {
+  if (user?.role === 'vendor' && user?.identityStatus !== 'approved') {
     return <Navigate to="/verify-identity" replace />;
   }
 

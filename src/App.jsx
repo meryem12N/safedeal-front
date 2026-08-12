@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RequireVerifiedIdentity from './components/RequireVerifiedIdentity';
+import RequireAdmin from './components/RequireAdmin';
 import Landing from './pages/Landing';
 import Auth from './pages/Auth';
 import ForgotPassword from './pages/ForgotPassword';
@@ -23,6 +24,11 @@ import Profile from './pages/Profile';
 import ProfileRoute from './pages/ProfileRoute';
 import SettingsRoute from './pages/SettingsRoute';
 import Notifications from './pages/Notifications';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AdminTransactions from './pages/AdminTransactions';
+import AdminIdentities from './pages/AdminIdentities';
+import AdminDisputes from './pages/AdminDisputes';
 import BuyerNotifications from './pages/BuyerNotifications';
 
 function App() {
@@ -76,8 +82,6 @@ function App() {
 
         {/* Page publique — accessible sans connexion, via le lien secure_link */}
         <Route path="/pay/:transactionId" element={<PaymentPage />} />
-        {/* Alias : le backend redirige ici après Stripe (successUrl/cancelUrl) */}
-        <Route path="/transactions/:transactionId" element={<PaymentPage />} />
         {/* Alias : le backend redirige ici après Stripe (successUrl/cancelUrl) */}
         <Route path="/transactions/:transactionId" element={<PaymentPage />} />
         <Route path="/dispute/:transactionId" element={<DisputeForm />} />
@@ -142,6 +146,57 @@ function App() {
           element={
             <ProtectedRoute>
               <BuyerNotifications />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <RequireAdmin>
+                <AdminDashboard />
+              </RequireAdmin>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <RequireAdmin>
+                <AdminUsers />
+              </RequireAdmin>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/transactions"
+          element={
+            <ProtectedRoute>
+              <RequireAdmin>
+                <AdminTransactions />
+              </RequireAdmin>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/identities"
+          element={
+            <ProtectedRoute>
+              <RequireAdmin>
+                <AdminIdentities />
+              </RequireAdmin>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/disputes"
+          element={
+            <ProtectedRoute>
+              <RequireAdmin>
+                <AdminDisputes />
+              </RequireAdmin>
             </ProtectedRoute>
           }
         />

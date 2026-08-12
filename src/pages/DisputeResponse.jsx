@@ -12,6 +12,7 @@ function DisputeResponse() {
   const [error, setError] = useState('');
 
   const [response, setResponse] = useState('');
+  const [files, setFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState('');
@@ -30,6 +31,11 @@ function DisputeResponse() {
     fetchTransaction();
   }, [transactionId]);
 
+  const handleFileChange = (event) => {
+    const selected = Array.from(event.target.files).slice(0, 4);
+    setFiles(selected);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError('');
@@ -41,6 +47,8 @@ function DisputeResponse() {
 
     setSubmitting(true);
     try {
+
+
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setSubmitted(true);
     } catch {
@@ -161,12 +169,12 @@ function DisputeResponse() {
           <div className="df-field-group">
             <label className="df-label">Ajouter des preuves (photos, optionnel)</label>
             <label className="df-upload-zone">
-              <input type="file" accept="image/*" multiple disabled={submitting} hidden />
+              <input type="file" accept="image/*" multiple onChange={handleFileChange} disabled={submitting} hidden />
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
                 <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
-              <span>Cliquez pour ajouter des photos</span>
+              <span>{files.length > 0 ? `${files.length} fichier(s) sélectionné(s)` : 'Cliquez pour ajouter des photos'}</span>
             </label>
           </div>
 

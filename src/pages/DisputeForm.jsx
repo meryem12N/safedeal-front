@@ -58,10 +58,15 @@ function DisputeForm() {
 
     setSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await api.post(`/transactions/${transaction.id}/dispute`, {
+        category,
+        description: description.trim(),
+        files: [],
+      });
       setSubmitted(true);
-    } catch {
-      setFormError("Impossible d'envoyer votre signalement pour le moment.");
+    } catch (err) {
+      const message = err?.response?.data?.message;
+      setFormError(message || "Impossible d'envoyer votre signalement pour le moment.");
     } finally {
       setSubmitting(false);
     }
@@ -139,7 +144,7 @@ function DisputeForm() {
           </span>
           <div>
             <h1>Signaler un problème</h1>
-            <p>Transaction : <strong>{transaction.title}</strong> — {Number(transaction.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {transaction.currency}</p>
+            <p>Transaction : <strong>{transaction.title}</strong> — {Number(typeof transaction.amount === 'string' ? transaction.amount.replace(',', '.') : transaction.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {transaction.currency}</p>
           </div>
         </div>
 

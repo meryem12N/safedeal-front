@@ -116,7 +116,8 @@ function resolveProductCategory(title = '') {
 }
 
 function formatAmount(amount, currency = 'MAD') {
-  return new Intl.NumberFormat('fr-MA', { style: 'currency', currency, maximumFractionDigits: 2 }).format(Number(amount || 0));
+  const normalized = typeof amount === 'string' ? amount.replace(',', '.') : amount;
+  return new Intl.NumberFormat('fr-MA', { style: 'currency', currency, maximumFractionDigits: 2 }).format(Number(normalized || 0));
 }
 
 function formatDate(createdAt) {
@@ -250,7 +251,7 @@ function BuyerTransactionsList() {
               {filteredTransactions.map((t, i) => {
                 const timelineIndex = getCardTimelineIndex(t.status);
                 const isSpecial = ['dispute', 'refunded', 'cancelled'].includes(t.status);
-                const token = t.secure_link ? t.secure_link.split('/').pop() : t.id;
+                const token = t.token || t.id;
                 return (
                   <div
                     key={t.id}
@@ -287,10 +288,10 @@ function BuyerTransactionsList() {
 
                       <div className="btl-card-date">
                         <span className="btl-card-label">Date</span>
-                        <strong>{formatDate(t.created_at)}</strong>
+                        <strong>{formatDate(t.createdAt)}</strong>
                       </div>
 
-                      <iconchevronright classname="btl-card-arrow" />
+                      <IconChevronRight className="btl-card-arrow" />
                     </div>
 
                     {!isSpecial && (
@@ -321,31 +322,45 @@ function BuyerTransactionsList() {
           )}
 
           {totalPages > 1 && (
-            <div className="btl-pagination">
-              <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Précédent</button>
-              <span>Page {page} / {totalPages}</span>
-              <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Suivant</button>
+            <div className="tl-pagination-pro">
+              <button
+                type="button"
+                className="tl-page-nav-btn"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                aria-label="Page précédente"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                  <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`tl-page-num ${p === page ? 'tl-page-num--active' : ''}`}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                className="tl-page-nav-btn"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                aria-label="Page suivante"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
           )}
 
-          <div className="btl-trust-banner">
-            <div className="btl-trust-content">
-              <span className="btl-trust-logo">
-                <svg viewBox="0 0 32 32" width="24" height="24" fill="none">
-                  <path d="M16 2 L28 6.5 V15 C28 22.5 22.8 27.8 16 30 V2 Z" fill="#054BF9" />
-                  <path d="M16 2 L4 6.5 V15 C4 22.5 9.2 27.8 16 30 V2 Z" fill="#3D6BFF" />
-                  <path d="M9.5 15.5 L14 20 L22.5 10.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <div>
-                <strong>Paiement 100% sécurisé par SafeDeal Maroc</strong>
-                <p>Votre argent reste protégé jusqu'à confirmation de la réception du produit. En cas de problème, vous êtes couvert.</p>
-              </div>
-            </div>
-            <div className="btl-trust-illustration-slot">
-              <img src={trustPadlockIllustration} alt="Sécurité" className="btl-trust-illustration" />
-            </div>
-          </div>
+          
         </div>
       </main>
     </div>

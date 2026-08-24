@@ -26,7 +26,6 @@ const TX_IMAGES = {
 
 const NAV_ITEMS = [
   { Icon: IconHome, label: 'Dashboard', path: '/dashboard/vendor' },
-  { Icon: IconWallet, label: 'Finance', path: null },
   { Icon: IconDispute, label: 'Litiges', path: '/disputes' },
 ];
 
@@ -242,11 +241,11 @@ function TransactionsList() {
       <main className="ud-main-full">
         <div className="ud-topbar-full ud-entrance-top">
           <div className="ud-topbar-greeting">
-            <h1>Bonjour, {firstName} 👋</h1>
+            <h1>Toutes les transactions 📜</h1>
           </div>
           <div className="ud-topbar-right">
             <NotificationsPanel />
-            <button className="ud-icon-btn" type="button"><IconSettings /></button>
+            <button className="ud-icon-btn" type="button" onClick={() => navigate('/settings')}><IconSettings /></button>
             <span className="ud-topbar-divider" />
             <Link to="/transactions/new" className="ud-new-btn-full">
               + Nouvelle transaction
@@ -256,10 +255,7 @@ function TransactionsList() {
         </div>
 
         <div className="ud-body-full">
-          <div className="ud-greeting ud-entrance-fade">
-            <h1>Toutes les transactions</h1>
-            <p>Retrouvez l'historique complet de vos transactions.</p>
-          </div>
+          
 
           <div className="tl-filters-row">
             <div className="tl-search-shell">
@@ -399,42 +395,44 @@ function TransactionsList() {
           )}
 
           {totalPages > 1 && (
-            <div className="tl-pagination">
+            <div className="tl-pagination-pro">
               <button
                 type="button"
+                className="tl-page-nav-btn"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
+                aria-label="Page précédente"
               >
-                Précédent
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                  <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
-              <span>Page {page} / {totalPages}</span>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`tl-page-num ${p === page ? 'tl-page-num--active' : ''}`}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+              ))}
+
               <button
                 type="button"
+                className="tl-page-nav-btn"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
+                aria-label="Page suivante"
               >
-                Suivant
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             </div>
           )}
-        <div className="tl-trust-banner">
-            <div className="tl-trust-content">
-              <span className="tl-trust-logo">
-                <svg viewBox="0 0 32 32" width="24" height="24" fill="none">
-                  <path d="M16 2 L28 6.5 V15 C28 22.5 22.8 27.8 16 30 V2 Z" fill="#2A46E0" />
-                  <path d="M16 2 L4 6.5 V15 C4 22.5 9.2 27.8 16 30 V2 Z" fill="#3B5BFF" />
-                  <path d="M9.5 15.5 L14 20 L22.5 10.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <div>
-                <strong>Paiement 100% sécurisé par SafeDeal Maroc</strong>
-                <p>Votre argent reste protégé jusqu'à confirmation de la réception du produit. En cas de problème, vous êtes couvert.</p>
-              </div>
-            </div>
-            <div className="tl-trust-illustration-slot">
-              <img src={trustPadlockIllustration} alt="Sécurité" className="tl-trust-illustration" />
-            </div>
-          </div>
+        
         </div>
       </main>
     </div>

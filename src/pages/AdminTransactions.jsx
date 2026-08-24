@@ -119,7 +119,8 @@ const STATUS_VARIANT = {
 };
 
 function formatAmount(amount) {
-  return new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 2 }).format(Number(amount));
+  const normalized = typeof amount === 'string' ? amount.replace(',', '.') : amount;
+  return new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 2 }).format(Number(normalized || 0));
 }
 
 function formatDate(iso) {
@@ -127,8 +128,9 @@ function formatDate(iso) {
 }
 
 function initials(name) {
-  if (!name || name === '—') return '—';
-  return name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+  const str = typeof name === 'string' ? name : name?.name;
+  if (!str) return '—';
+  return str.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 }
 
 function AdminTransactions() {
@@ -283,7 +285,7 @@ function AdminTransactions() {
                       <div className="adm-table-name">
                         <span className="adm-table-avatar adm-table-avatar--sm">{initials(t.buyer)}</span>
                         <div className="adm-table-name-text">
-                          <strong>{t.buyer || '—'}</strong>
+                          <strong>{(typeof t.buyer === 'string' ? t.buyer : t.buyer?.name) || '—'}</strong>
                         </div>
                       </div>
                     </td>
@@ -291,7 +293,7 @@ function AdminTransactions() {
                       <div className="adm-table-name">
                         <span className="adm-table-avatar adm-table-avatar--sm adm-table-avatar--alt">{initials(t.vendor)}</span>
                         <div className="adm-table-name-text">
-                          <strong>{t.vendor || '—'}</strong>
+                          <strong>{(typeof t.vendor === 'string' ? t.vendor : t.vendor?.name) || '—'}</strong>
                         </div>
                       </div>
                     </td>

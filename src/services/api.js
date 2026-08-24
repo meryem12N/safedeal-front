@@ -31,4 +31,10 @@ api.interceptors.response.use(
   }
 );
 
+export function getAvatarUrl(avatarPath) {
+  if (!avatarPath) return null;
+  const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
+  return `${baseUrl}/${avatarPath}`;
+}
+
 export default api;

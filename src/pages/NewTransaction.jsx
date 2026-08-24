@@ -27,7 +27,6 @@ import './NewTransaction.css';
 
 const NAV_ITEMS = [
   { Icon: IconHome, label: 'Dashboard', path: '/dashboard/vendor' },
-  { Icon: IconWallet, label: 'Finance', path: null },
   { Icon: IconDispute, label: 'Litiges', path: '/disputes' },
 ];
 
@@ -212,12 +211,12 @@ function NewTransaction() {
       <main className="ud-main-full">
         <div className="ud-topbar-full ud-entrance-top">
           <div className="ud-topbar-greeting">
-            <h1>Bonjour, {firstName} 👋</h1>
+            <h1>Créer une nouvelle transaction <span className="nt-badge-new">Nouveau</span></h1>
           </div>
 
           <div className="ud-topbar-right">
             <NotificationsPanel />
-            <button className="ud-icon-btn" type="button"><IconSettings /></button>
+            <button className="ud-icon-btn" type="button" onClick={() => navigate('/settings')}><IconSettings /></button>
             <span className="ud-topbar-divider" />
             <Link to="/dashboard/vendor" className="ud-new-btn-full">
               Retour au dashboard
@@ -227,10 +226,7 @@ function NewTransaction() {
         </div>
 
         <div className="ud-body-full">
-          <div className="ud-greeting ud-entrance-fade">
-            <h1>Créer une nouvelle transaction <span className="nt-badge-new">Nouveau</span></h1>
-            <p>Renseignez le produit ou service à sécuriser, puis générez un lien public pour recevoir le paiement en toute confiance.</p>
-          </div>
+          
 
           <div className="nt-stepper">
             <div className={`nt-step ${step === 1 ? 'nt-step--active' : 'nt-step--done'}`}>

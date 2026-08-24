@@ -1677,3 +1677,265 @@ button.adm-stat-card:hover {
   background: var(--adm-red-bg);
   color: var(--adm-red);
 }
+
+/* ---------- Carte de litige v2 (design amélioré) ---------- */
+
+.adm-dispute-card-v2 {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-left: 3px solid var(--adm-red);
+  border-radius: 16px;
+  padding: 22px 24px;
+  opacity: 0;
+  animation: admFadeUp 0.5s ease forwards;
+}
+
+.adm-dv2-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.adm-dv2-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--adm-red-bg);
+  color: var(--adm-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.adm-dv2-header-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.adm-dv2-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--adm-text);
+}
+
+.adm-dv2-ref {
+  font-size: 11.5px;
+  color: var(--adm-text-muted);
+}
+
+.adm-dv2-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .adm-dv2-body { grid-template-columns: 1fr; }
+}
+
+.adm-dv2-block-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--adm-text-muted);
+  margin-bottom: 8px;
+}
+
+.adm-dv2-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm-dv2-person-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--adm-text);
+}
+
+.adm-dv2-person-email {
+  font-size: 11px;
+  color: var(--adm-text-muted);
+}
+
+.adm-dv2-category {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--adm-red);
+  background: var(--adm-red-bg);
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+  width: fit-content;
+}
+
+.adm-dv2-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--adm-text-secondary);
+}
+
+.adm-dv2-date svg {
+  color: var(--adm-text-muted);
+  flex-shrink: 0;
+}
+
+.adm-dv2-date-relative {
+  font-size: 11px;
+  color: var(--adm-text-muted);
+  margin-top: 2px;
+}
+
+.adm-dv2-description {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--adm-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 12.5px;
+  color: var(--adm-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.adm-dv2-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--adm-border);
+}
+
+/* ---------- Carte de litige v2 — tailles agrandies ---------- */
+
+.adm-dispute-card-v2 {
+  padding: 26px 28px;
+  border-left-width: 4px;
+  border-radius: 18px;
+}
+
+.adm-dv2-header {
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.adm-dv2-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+}
+
+.adm-dv2-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.adm-dv2-header-text {
+  gap: 12px;
+}
+
+.adm-dv2-title {
+  font-size: 19px;
+}
+
+.adm-dv2-ref {
+  font-size: 13.5px;
+}
+
+.adm-dv2-header .adm-badge {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
+.adm-dv2-header .adm-btn--examine {
+  font-size: 14px;
+  padding: 12px 20px;
+}
+
+.adm-dv2-header .adm-btn--examine svg {
+  width: 16px;
+  height: 16px;
+}
+
+.adm-dv2-body {
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.adm-dv2-block-label {
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.adm-dv2-person {
+  gap: 12px;
+}
+
+.adm-dv2-person .adm-table-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+}
+
+.adm-dv2-person-name {
+  font-size: 16px;
+}
+
+.adm-dv2-person-email {
+  font-size: 13px;
+}
+
+.adm-dv2-category {
+  font-size: 14px;
+  padding: 7px 16px;
+}
+
+.adm-dv2-date {
+  gap: 8px;
+  font-size: 15px;
+}
+
+.adm-dv2-date svg {
+  width: 16px;
+  height: 16px;
+}
+
+.adm-dv2-date-relative {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.adm-dv2-description {
+  padding: 16px 20px;
+  border-radius: 14px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.adm-dv2-footer {
+  padding-top: 16px;
+}
+
+.adm-dv2-footer .adm-dispute-messages {
+  font-size: 14px;
+}
+
+.adm-dv2-footer .adm-dispute-messages svg {
+  width: 16px;
+  height: 16px;
+}

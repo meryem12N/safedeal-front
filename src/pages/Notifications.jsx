@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -57,7 +58,15 @@ function Notifications() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const isVendor = user?.role === 'vendor';
-  const [notifications, setNotifications] = useState(ALL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get('/notifications')
+      .then((res) => setNotifications(Array.isArray(res.data?.data) ? res.data.data : []))
+      .catch(() => setNotifications([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const NAV_ITEMS = [
     { Icon: IconHome, label: 'Dashboard', path: isVendor ? '/dashboard/vendor' : '/dashboard/buyer' },
@@ -66,10 +75,26 @@ function Notifications() {
   ];
 
   const firstName = user?.name?.split(' ')[0] || 'Utilisateur';
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const markAllRead = () => {
-    setNotifications((current) => current.map((n) => ({ ...n, unread: false })));
+  const markAllRead = async () => {
+    console.log('DEBUG: markAllRead cliqué');
+    try {
+      await api.post('/notifications/read-all');
+      setNotifications((current) => current.map((n) => ({ ...n, isRead: true })));
+    } catch {
+      // silencieux
+    }
+  };
+
+  const formatNotifTime = (iso) => {
+    if (!iso) return '';
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const hours = Math.floor(diffMs / 3600000);
+    if (hours < 1) return "à l'instant";
+    if (hours < 24) return `Il y a ${hours}h`;
+    const days = Math.floor(hours / 24);
+    return days === 1 ? 'Hier' : `Il y a ${days} jours`;
   };
 
   return (
@@ -122,7 +147,7 @@ function Notifications() {
           </div>
           <div className="ud-topbar-right">
             <NotificationsPanel />
-            <button className="ud-icon-btn" type="button"><IconSettings /></button>
+            <button className="ud-icon-btn" type="button" onClick={() => navigate('/settings')}><IconSettings /></button>
           </div>
         </div>
 
@@ -133,7 +158,7 @@ function Notifications() {
               <p>Retrouvez toutes vos notifications récentes.</p>
             </div>
             {unreadCount > 0 && (
-              <button className="nt-mark-all-btn" type="button" onClick={markAllRead}>
+              <button className="nt-mark-all-btn" type="button" onClick={markAllRead} title="Marque comme lu pour cette session (la persistance arrive bientôt)">
                 <IconCheck />
                 Tout marquer comme lu
               </button>
@@ -148,25 +173,20 @@ function Notifications() {
             </div>
           ) : (
             <div className="nt-list">
-              {notifications.map((n, i) => {
-                const Icon = NOTIF_ICON[n.type];
-                const colors = NOTIF_COLOR[n.type];
-                return (
-                  <div key={n.id} className={`nt-card ${n.unread ? 'nt-card--unread' : ''}`} style={{ animationDelay: `${i * 0.05}s` }}>
-                    <span className="nt-card-icon" style={{ background: colors.bg, color: colors.color }}>
-                      <Icon />
-                    </span>
-                    <div className="nt-card-content">
-                      <div className="nt-card-top">
-                        <strong>{n.title}</strong>
-                        {n.unread && <span className="nt-dot" />}
-                      </div>
-                      <p>{n.desc}</p>
-                      <span className="nt-card-time">{n.time}</span>
+              {notifications.map((n, i) => (
+                <div key={n.id} className={`nt-card ${!n.isRead ? 'nt-card--unread' : ''}`} style={{ animationDelay: `${i * 0.05}s` }}>
+                  <span className="nt-card-icon" style={{ background: '#04275A', color: '#4DC3FF' }}>
+                    <IconBox />
+                  </span>
+                  <div className="nt-card-content">
+                    <div className="nt-card-top">
+                      {!n.isRead && <span className="nt-dot" />}
                     </div>
+                    <p>{n.message}</p>
+                    <span className="nt-card-time">{formatNotifTime(n.createdAt)}</span>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>

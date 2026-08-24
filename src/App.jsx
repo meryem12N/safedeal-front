@@ -13,6 +13,7 @@ import VendorDashboard from './pages/VendorDashboard';
 import BuyerDashboard from './pages/BuyerDashboard';
 import NewTransaction from './pages/NewTransaction';
 import PaymentPage from './pages/PaymentPage';
+import PaymentRedirect from './pages/PaymentRedirect';
 import TransactionsList from './pages/TransactionsList';
 import BuyerTransactionsList from './pages/BuyerTransactionsList';
 import BuyerDisputesList from './pages/BuyerDisputesList';
@@ -84,6 +85,9 @@ function App() {
         <Route path="/pay/:transactionId" element={<PaymentPage />} />
         {/* Alias : le backend redirige ici après Stripe (successUrl/cancelUrl) */}
         <Route path="/transactions/:transactionId" element={<PaymentPage />} />
+        {/* Redirections de secours après paiement Stripe, en attendant la config successUrl/cancelUrl côté backend */}
+        <Route path="/payment/success" element={<PaymentRedirect />} />
+        <Route path="/payment/cancel" element={<Navigate to="/transactions" replace />} />
         <Route path="/dispute/:transactionId" element={<DisputeForm />} />
         <Route
           path="/disputes"

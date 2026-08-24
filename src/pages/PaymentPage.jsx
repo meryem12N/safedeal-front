@@ -100,7 +100,11 @@ function PaymentPage() {
       const { data } = await api.post(`/transactions/${transaction.id}/checkout`);
 
       if (data?.checkout_url) {
-        window.location.href = data.checkout_url;
+        localStorage.setItem('safedeal_pending_payment_id', transactionId);
+        console.log('DEBUG - id sauvegarde:', transaction.id, '- valeur localStorage:', localStorage.getItem('safedeal_pending_payment_id'));
+        setTimeout(() => {
+          window.location.href = data.checkout_url;
+        }, 2000);
       } else {
         setError("Impossible de générer le lien de paiement.");
         setPaying(false);
@@ -152,10 +156,8 @@ function PaymentPage() {
     setConfirming(true);
     setError('');
     try {
-      await api.post(`/transactions/${transaction.id}/deliver`);
-      // Confirmation de réception = déclenchement immédiat de la libération des fonds.
-      const { data } = await api.post(`/transactions/${transaction.id}/close`);
-      setTransaction(data?.data || { ...transaction, status: 'closed' });
+      const { data } = await api.post(`/transactions/${transaction.id}/deliver`);
+      setTransaction(data?.data || { ...transaction, status: 'delivered' });
       setShowConfirmModal(false);
     } catch (err) {
       const message = err?.response?.data?.message;
@@ -614,6 +616,18 @@ function PaymentPage() {
         </div>
       </div>
       )
+      )}
+
+      {transaction.status === 'delivered' && (
+        <div className="pp-status-banner pp-status-banner--neutral">
+          <span className="pp-status-banner-icon">
+            <IconCheck />
+          </span>
+          <div>
+            <strong>Réception confirmée</strong>
+            <p>En attente de libération des fonds par le vendeur.</p>
+          </div>
+        </div>
       )}
 
       {transaction.status === 'dispute' && (

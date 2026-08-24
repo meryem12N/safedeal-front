@@ -34,7 +34,6 @@ function Profile() {
 
   const NAV_ITEMS = [
     { Icon: IconHome, label: 'Dashboard', path: isVendor ? '/dashboard/vendor' : '/dashboard/buyer' },
-    { Icon: IconWallet, label: 'Finance', path: null },
     { Icon: IconDispute, label: 'Litiges', path: isVendor ? '/disputes' : null },
   ];
 
@@ -62,8 +61,8 @@ function Profile() {
     .join('')
     .toUpperCase();
 
-  const memberSince = user?.created_at
-    ? new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(new Date(user.created_at))
+  const memberSince = user?.createdAt
+    ? new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(new Date(user.createdAt))
     : '—';
 
   const handleSaveInfo = async (event) => {
@@ -133,12 +132,20 @@ function Profile() {
         </div>
 
         <nav className="ud-nav-full">
+          <button
+            className="ud-nav-item-full"
+            style={{ animationDelay: '0.1s' }}
+            type="button"
+            onClick={() => navigate(NAV_ITEMS[0].path)}
+          >
+            <IconHome /> <span>Dashboard</span>
+          </button>
           {isVendor && <SidebarTransactionsMenu delay={0.13} />}
-          {NAV_ITEMS.map((item, index) => (
+          {NAV_ITEMS.slice(1).map((item, index) => (
             <button
               key={item.label}
               className={`ud-nav-item-full ${item.active ? 'active' : ''} ${!item.path ? 'ud-nav-disabled' : ''}`}
-              style={{ animationDelay: (0.1 + index * 0.03) + 's' }}
+              style={{ animationDelay: (0.16 + index * 0.03) + 's' }}
               type="button"
               onClick={() => item.path && navigate(item.path)}
               disabled={!item.path}
@@ -154,20 +161,16 @@ function Profile() {
       <main className="ud-main-full">
         <div className="ud-topbar-full ud-entrance-top">
           <div className="ud-topbar-greeting">
-            <h1>Bonjour, {firstName} 👋</h1>
-            <p className="pf-topbar-sub">Bienvenue sur votre espace sécurisé</p>
+            <h1>Mon profil 👤</h1>
           </div>
           <div className="ud-topbar-right">
             <NotificationsPanel />
-            <button className="ud-icon-btn" type="button"><IconSettings /></button>
+            <button className="ud-icon-btn" type="button" onClick={() => navigate('/settings')}><IconSettings /></button>
           </div>
         </div>
 
         <div className="ud-body-full">
-          <div className="ud-greeting ud-entrance-fade">
-            <h1>Mon profil</h1>
-            <p>Gérez vos informations personnelles et vos paramètres de sécurité.</p>
-          </div>
+          
 
           <div className="pf-header-card">
             <span className="pf-avatar">{initials}</span>
@@ -283,11 +286,15 @@ function Profile() {
 
                 {infoError && <div className="ud-form-error">{infoError}</div>}
 
+                <div className="ud-form-error" style={{ background: 'rgba(232,162,61,0.12)', color: '#E8A23D', border: '1px solid rgba(232,162,61,0.25)' }}>
+                  Cette fonctionnalité arrive bientôt.
+                </div>
+
                 <div className="pf-form-actions">
                   {infoSuccess && (
                     <span className="pf-success-tag"><IconCheck /> Enregistré</span>
                   )}
-                  <button className="ud-new-btn-full ud-form-submit pf-submit-btn" type="submit" disabled={savingInfo}>
+                  <button className="ud-new-btn-full ud-form-submit pf-submit-btn" type="submit" disabled={true}>
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none">
                       <path d="M5 4h11l3 3v13H5V4Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
                       <path d="M8 4v5h8V4M8 14h8v6H8v-6Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
@@ -384,11 +391,15 @@ function Profile() {
 
                 {passwordError && <div className="ud-form-error">{passwordError}</div>}
 
+                <div className="ud-form-error" style={{ background: 'rgba(232,162,61,0.12)', color: '#E8A23D', border: '1px solid rgba(232,162,61,0.25)' }}>
+                  Cette fonctionnalité arrive bientôt.
+                </div>
+
                 <div className="pf-form-actions">
                   {passwordSuccess && (
                     <span className="pf-success-tag"><IconCheck /> Mot de passe mis à jour</span>
                   )}
-                  <button className="ud-new-btn-full ud-form-submit pf-submit-btn" type="submit" disabled={savingPassword}>
+                  <button className="ud-new-btn-full ud-form-submit pf-submit-btn" type="submit" disabled={true}>
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none">
                       <rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.8"/>
                       <path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" strokeWidth="1.8"/>

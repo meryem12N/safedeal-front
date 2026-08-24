@@ -144,7 +144,8 @@ function getCategoryVisual(title) {
 }
 
 function formatAmount(amount, currency = 'MAD') {
-  return new Intl.NumberFormat('fr-MA', { style: 'currency', currency, maximumFractionDigits: 2 }).format(Number(amount || 0));
+  const normalized = typeof amount === 'string' ? amount.replace(',', '.') : amount;
+  return new Intl.NumberFormat('fr-MA', { style: 'currency', currency, maximumFractionDigits: 2 }).format(Number(normalized || 0));
 }
 
 function formatDate(createdAt) {
@@ -211,7 +212,10 @@ function BuyerDashboard() {
   const currentOrder = transactions.find((t) => activeStatuses.includes(t.status)) || null;
   const recentTransactions = transactions.slice(0, 4);
 
-  const getToken = (t) => (t?.secure_link ? t.secure_link.split('/').pop() : t?.id);
+  const getToken = (t) => {
+    console.log('DEBUG BUYER TX:', t);
+    return t?.token || t?.id;
+  };
 
   return (
     <div className={`bd-page ${mounted ? 'bd-mounted' : ''}`}>

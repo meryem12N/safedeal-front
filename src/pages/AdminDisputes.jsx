@@ -166,12 +166,25 @@ const NAV_ITEMS = [
 // vrai endpoint GET /admin/disputes?status=all.
 const MOCK_HISTORY_STATS = { inReview: 3, resolved: 19, resolutionRate: 95 };
 
+const DISPUTE_CATEGORY_LABEL = {
+  not_received: 'Colis non reçu',
+  damaged: 'Produit endommagé',
+  not_as_described: 'Produit non conforme',
+  other: 'Autre problème',
+};
+
 function formatDate(iso) {
-  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(iso));
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
 }
 
 function formatRelative(iso) {
-  const diffMs = Date.now() - new Date(iso).getTime();
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const diffMs = Date.now() - date.getTime();
   const hours = Math.floor(diffMs / 3600000);
   if (hours < 1) return "à l'instant";
   if (hours < 24) return `il y a ${hours}h`;
@@ -203,7 +216,10 @@ function AdminDisputes() {
 
   useEffect(() => {
     api.get('/admin/disputes')
-      .then((res) => setDisputes(res.data?.data || []))
+      .then((res) => {
+        console.log('DEBUG DISPUTES:', res.data?.data);
+        setDisputes(res.data?.data || []);
+      })
       .catch(() => setLoadError("Impossible de charger les litiges."))
       .finally(() => setLoading(false));
   }, []);
@@ -212,12 +228,11 @@ function AdminDisputes() {
 
   const visibleDisputes = disputes
     .filter((d) =>
-      (d.transactionTitle || '').toLowerCase().includes(search.toLowerCase()) ||
-      (d.buyerName || '').toLowerCase().includes(search.toLowerCase()) ||
-      (d.vendorName || '').toLowerCase().includes(search.toLowerCase())
+      (d.description || '').toLowerCase().includes(search.toLowerCase()) ||
+      (d.openedBy?.name || '').toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => {
-      const diff = new Date(b.openedAt) - new Date(a.openedAt);
+      const diff = new Date(b.createdAt) - new Date(a.createdAt);
       return sortOrder === 'recent' ? diff : -diff;
     });
   const [decision, setDecision] = useState('refunded');
@@ -369,67 +384,54 @@ function AdminDisputes() {
           ) : (
             <div className="adm-list">
               {visibleDisputes.map((d, i) => (
-                <div key={d.id} className="adm-dispute-card" style={{ animationDelay: `${i * 0.06}s` }}>
-                  <div className="adm-dispute-card-top">
-                    <span className="adm-avatar adm-avatar--red adm-avatar--sm"><IconDispute /></span>
-                    <span className="adm-tx-thumb adm-tx-thumb--dispute" />
-                    <div className="adm-dispute-title-block">
-                      <strong>{d.transactionTitle}</strong>
-                      <span className="adm-tx-ref">Réf. {d.ref}</span>
-                      <span className="adm-badge adm-badge--dispute adm-badge--stacked adm-badge--uppercase">Litige ouvert</span>
+                <div key={d.id} className="adm-dispute-card-v2" style={{ animationDelay: `${i * 0.06}s` }}>
+                  <div className="adm-dv2-header">
+                    <span className="adm-dv2-icon"><IconDispute /></span>
+                    <div className="adm-dv2-header-text">
+                      <span className="adm-dv2-title">Litige #{d.id}</span>
+                      {d.transactionId && <span className="adm-dv2-ref">Transaction #{d.transactionId}</span>}
+                      <span className="adm-badge adm-badge--dispute adm-badge--uppercase">Ouvert</span>
                     </div>
-
-                    <div className="adm-dispute-party">
-                      <span className="adm-card-sub">Acheteur</span>
-                      <div className="adm-table-name">
-                        <span className="adm-table-avatar adm-table-avatar--sm adm-table-avatar--purple">{(d.buyerName || '?')[0]}</span>
-                        <div className="adm-table-name-text">
-                          <strong>{d.buyerName || '—'}</strong>
-                          <small>{d.buyerEmail}</small>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="adm-dispute-party">
-                      <span className="adm-card-sub">Vendeur</span>
-                      <div className="adm-table-name">
-                        <span className="adm-table-avatar adm-table-avatar--sm adm-table-avatar--alt">{(d.vendorName || '?')[0]}</span>
-                        <div className="adm-table-name-text">
-                          <strong>{d.vendorName || '—'}</strong>
-                          <small>{d.vendorEmail}</small>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="adm-dispute-reason">
-                      <span className="adm-card-sub">Motif du litige</span>
-                      <strong className="adm-dispute-reason-title">{d.category}</strong>
-                      <span className="adm-dispute-reason-desc">{d.description}</span>
-                    </div>
-
-                    <div className="adm-dispute-date">
-                      <span className="adm-card-sub">Ouvert le</span>
-                      <span className="adm-tx-date-cell adm-tx-date-cell--icon">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none">
-                          <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
-                          <path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                        </svg>
-                        {formatDate(d.openedAt)}
-                      </span>
-                      <span className="adm-card-time">{formatRelative(d.openedAt)}</span>
-                    </div>
-
                     <button type="button" className="adm-btn adm-btn--examine" onClick={() => openModal(d)}>
                       Examiner <IconChevronRight />
                     </button>
                   </div>
 
-                  <div className="adm-dispute-card-bottom">
+                  <div className="adm-dv2-body">
+                    <div>
+                      <span className="adm-dv2-block-label">Signalé par</span>
+                      <div className="adm-dv2-person">
+                        <span className="adm-table-avatar adm-table-avatar--sm adm-table-avatar--purple">{(d.openedBy?.name || '?')[0]}</span>
+                        <div>
+                          <div className="adm-dv2-person-name">{d.openedBy?.name || '—'}</div>
+                          <div className="adm-dv2-person-email">{d.openedBy?.email}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="adm-dv2-block-label">Motif</span>
+                      <span className="adm-dv2-category">{DISPUTE_CATEGORY_LABEL[d.category] || d.category}</span>
+                    </div>
+
+                    <div>
+                      <span className="adm-dv2-block-label">Ouvert le</span>
+                      <div className="adm-dv2-date">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none">
+                          <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                          <path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                        </svg>
+                        {formatDate(d.createdAt)}
+                      </div>
+                      <div className="adm-dv2-date-relative">{formatRelative(d.createdAt)}</div>
+                    </div>
+                  </div>
+
+                  <div className="adm-dv2-description">{d.description}</div>
+
+                  <div className="adm-dv2-footer">
                     <span className="adm-dispute-messages">
-                      <IconMessageCircle /> {d.messagesCount} message{d.messagesCount > 1 ? 's' : ''}
-                    </span>
-                    <span className="adm-dispute-amount">
-                      Montant en jeu : <strong>{d.amount}</strong>
+                      <IconMessageCircle /> {(d.evidences || []).length} preuve{(d.evidences || []).length > 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>

@@ -125,8 +125,6 @@ function VendorTrackingSteps({ currentStep }) {
 }
 const NAV_ITEMS = [
   { Icon: IconHome, active: true, label: 'Dashboard', path: '/dashboard/vendor' },
-  
-  { Icon: IconWallet, label: 'Finance', path: null },
   { Icon: IconDispute, label: 'Litiges', path: '/disputes' },
 ];
 
@@ -165,7 +163,8 @@ function resolveProductCategory(title = '') {
 }
 
 function formatTransactionAmount(amount, currency = 'MAD') {
-  const numericAmount = Number(amount || 0);
+  const normalized = typeof amount === 'string' ? amount.replace(',', '.') : amount;
+  const numericAmount = Number(normalized || 0);
   return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
     currency,
@@ -192,6 +191,7 @@ function VendorDashboard() {
   const [transactions, setTransactions] = useState([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [shippingModalTx, setShippingModalTx] = useState(null);
+  const [releasingId, setReleasingId] = useState(null);
   const [trackingNumber, setTrackingNumber] = useState('');
   const [carrier, setCarrier] = useState('');
   const [shippingSubmitting, setShippingSubmitting] = useState(false);
@@ -245,6 +245,20 @@ function VendorDashboard() {
     setShippingModalTx(null);
   };
 
+  const handleReleaseFunds = async (transactionId) => {
+    setReleasingId(transactionId);
+    try {
+      const { data } = await api.post(`/transactions/${transactionId}/close`);
+      setTransactions((current) =>
+        current.map((t) => (t.id === transactionId ? { ...t, status: data?.data?.status || 'closed' } : t))
+      );
+    } catch (err) {
+      alert(err?.response?.data?.message || "Impossible de libérer les fonds pour le moment.");
+    } finally {
+      setReleasingId(null);
+    }
+  };
+
   const handleConfirmShipping = async (event) => {
     event.preventDefault();
     setShippingError('');
@@ -258,7 +272,7 @@ function VendorDashboard() {
 
     try {
       const { data } = await api.post(`/transactions/${shippingModalTx.id}/ship`, {
-        tracking_number: trackingNumber,
+        trackingNumber: trackingNumber,
         carrier,
       });
 
@@ -329,8 +343,8 @@ function VendorDashboard() {
     <span className="ud-kbd">⌘K</span>
   </div>
   <div className="ud-topbar-right">
-    <button className="ud-icon-btn"><IconBell /></button>
-    <button className="ud-icon-btn"><IconSettings /></button>
+    <button className="ud-icon-btn" onClick={() => navigate('/notifications')}><IconBell /></button>
+    <button className="ud-icon-btn" onClick={() => navigate('/settings')}><IconSettings /></button>
     <span className="ud-topbar-divider" />
     <Link to="/transactions/new" className="ud-new-btn-full">
         + Nouvelle transaction
@@ -525,6 +539,17 @@ function VendorDashboard() {
                                 <button className="ud-ship-btn" type="button" onClick={() => openShippingModal(t)}>
                                   <IconTruck />
                                   Marquer comme expédié
+                                </button>
+                              )}
+                              {t.status === 'delivered' && (
+                                <button
+                                  className="ud-ship-btn"
+                                  type="button"
+                                  onClick={() => handleReleaseFunds(t.id)}
+                                  disabled={releasingId === t.id}
+                                >
+                                  <IconCheck />
+                                  {releasingId === t.id ? 'Libération...' : 'Libérer les fonds'}
                                 </button>
                               )}
                             </td>

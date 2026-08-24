@@ -93,7 +93,10 @@
   padding: 22px;
   position: relative;
   overflow: hidden;
-  margin-top: -50px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .nt-side-badge {
   display: inline-flex;
@@ -198,7 +201,7 @@
   font-size: 12.5px;
   color: #E8EEFF;
   text-align: left;
-  margin-top: -40px;
+  margin-top: 0;
   display: flex;
   align-items: flex-start;
   gap: 10px;

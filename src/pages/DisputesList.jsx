@@ -16,7 +16,6 @@ import SidebarTransactionsMenu from '../components/SidebarTransactionsMenu';
 
 const NAV_ITEMS = [
   { Icon: IconHome, label: 'Dashboard', path: '/dashboard/vendor' },
-  { Icon: IconWallet, label: 'Finance', path: null },
   { Icon: IconDispute, active: true, label: 'Litiges', path: '/disputes' },
 ];
 
@@ -29,11 +28,12 @@ function resolveProductCategory(title = '') {
 }
 
 function formatTransactionAmount(amount, currency = 'MAD') {
+  const normalized = typeof amount === 'string' ? amount.replace(',', '.') : amount;
   return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
     currency,
     maximumFractionDigits: 2,
-  }).format(Number(amount || 0));
+  }).format(Number(normalized || 0));
 }
 
 function DisputesList() {
@@ -109,11 +109,11 @@ function DisputesList() {
       <main className="ud-main-full">
         <div className="ud-topbar-full ud-entrance-top">
           <div className="ud-topbar-greeting">
-            <h1>Bonjour, {firstName} 👋</h1>
+            <h1>Litiges en cours ⚖️</h1>
           </div>
           <div className="ud-topbar-right">
             <NotificationsPanel />
-            <button className="ud-icon-btn" type="button"><IconSettings /></button>
+            <button className="ud-icon-btn" type="button" onClick={() => navigate('/settings')}><IconSettings /></button>
             <span className="ud-topbar-divider" />
             <Link to="/transactions/new" className="ud-new-btn-full">
               + Nouvelle transaction
@@ -123,10 +123,7 @@ function DisputesList() {
         </div>
 
         <div className="ud-body-full">
-          <div className="ud-greeting ud-entrance-fade">
-            <h1>Litiges en cours</h1>
-            <p>Consultez et répondez aux litiges ouverts par vos acheteurs.</p>
-          </div>
+          
 
           {loading ? (
             <div className="ud-table-card">
@@ -153,7 +150,7 @@ function DisputesList() {
                   </div>
                   <div className="dl-card-amount">{formatTransactionAmount(t.amount, t.currency)}</div>
                   <span className="dl-card-badge">Litige ouvert</span>
-                  <Link to={`/disputes/${t.secure_link ? t.secure_link.split('/').pop() : t.id}`} className="dl-card-btn">
+                  <Link to={`/disputes/${t.token || t.id}`} className="dl-card-btn">
                     Répondre
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
                       <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

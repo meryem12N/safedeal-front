@@ -353,3 +353,86 @@
   border-radius: 999px;
   font-size: 11px;
 }
+
+.tl-pagination-pro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+}
+.tl-page-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: #9AA3BF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tl-page-nav-btn:hover:not(:disabled) {
+  background: rgba(61,107,255,0.15);
+  color: #fff;
+  border-color: rgba(61,107,255,0.4);
+}
+.tl-page-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.tl-page-num {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: #9AA3BF;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tl-page-num:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+.tl-page-num--active {
+  background: #3D6BFF;
+  border-color: #3D6BFF;
+  color: #fff;
+}
+.ud-title-animated h1 {
+  opacity: 0;
+  transform: translateY(-8px);
+  animation: udTitleReveal 0.6s ease-out forwards;
+}
+
+.ud-title-highlight {
+  background: linear-gradient(90deg, #3D6BFF 0%, #7C93FF 50%, #E8C572 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: udTitleShimmer 3s ease-in-out infinite;
+}
+
+@keyframes udTitleReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes udTitleShimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}

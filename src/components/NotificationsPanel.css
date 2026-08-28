@@ -172,6 +172,67 @@
   background: rgba(255,255,255,0.03);
 }
 
+/* ---------- Variante admin ---------- */
+
+.np-panel.np-admin {
+  background: #14171F;
+  border: 1px solid rgba(91, 141, 239, 0.18);
+  box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+}
+
+.np-panel.np-admin .np-panel-head {
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+
+.np-panel.np-admin .np-panel-head strong {
+  color: #F5F6FA;
+}
+
+.np-panel.np-admin .np-mark-read {
+  color: #5B8DEF;
+}
+
+.np-panel.np-admin .np-empty {
+  color: #5B6272;
+}
+
+.np-panel.np-admin .np-item {
+  border-bottom-color: rgba(255,255,255,0.04);
+}
+
+.np-panel.np-admin .np-item:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.np-panel.np-admin .np-item--unread {
+  background: rgba(91, 141, 239, 0.06);
+}
+
+.np-panel.np-admin .np-item-content strong {
+  color: #F5F6FA;
+}
+
+.np-panel.np-admin .np-item-content p {
+  color: #9AA9D0;
+}
+
+.np-panel.np-admin .np-item-time {
+  color: #5B6272;
+}
+
+.np-panel.np-admin .np-dot {
+  background: #5B8DEF;
+}
+
+.np-panel.np-admin .np-see-all {
+  color: #5B8DEF;
+  border-top-color: rgba(255,255,255,0.06);
+}
+
+.np-panel.np-admin .np-see-all:hover {
+  background: rgba(255,255,255,0.03);
+}
+
 /* ---------- Variante claire ---------- */
 
 .np-panel.np-light {

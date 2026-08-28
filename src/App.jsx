@@ -31,6 +31,8 @@ import AdminTransactions from './pages/AdminTransactions';
 import AdminIdentities from './pages/AdminIdentities';
 import AdminDisputes from './pages/AdminDisputes';
 import BuyerNotifications from './pages/BuyerNotifications';
+import AdminNotifications from './pages/AdminNotifications';
+import AdminSettings from './pages/AdminSettings';
 
 function App() {
   return (
@@ -174,6 +176,26 @@ function App() {
             <ProtectedRoute>
               <RequireAdmin>
                 <AdminDashboard />
+              </RequireAdmin>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute>
+              <RequireAdmin>
+                <AdminNotifications />
+              </RequireAdmin>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute>
+              <RequireAdmin>
+                <AdminSettings />
               </RequireAdmin>
             </ProtectedRoute>
           }

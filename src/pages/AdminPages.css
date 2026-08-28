@@ -1939,3 +1939,15 @@ button.adm-stat-card:hover {
   width: 16px;
   height: 16px;
 }
+
+.adm-topbar-actions .adm-icon-btn.adm-icon-btn--blue {
+  background: #101a34;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #9aa9d0;
+}
+.adm-topbar-actions .adm-icon-btn.adm-icon-btn--blue:hover {
+  background: #16213f;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #9aa9d0;
+  transform: translatey(-1px);
+}

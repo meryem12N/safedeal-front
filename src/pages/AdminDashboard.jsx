@@ -250,9 +250,10 @@ function AdminDashboard() {
               <IconSearch />
               <input type="text" placeholder="Rechercher..." />
             </div>
-            <NotificationsPanel />
-            <button className="adm-icon-btn" type="button"><IconSettings /></button>
-            <button className="adm-icon-btn" type="button"><IconMoon /></button>
+            <NotificationsPanel theme="admin" />
+            <button className="adm-icon-btn adm-icon-btn--blue" type="button" onClick={() => navigate('/admin/settings')}>
+              <IconSettings />
+            </button>
           </div>
         </div>
 

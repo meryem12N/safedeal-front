@@ -19,8 +19,13 @@ function formatNotifTime(iso) {
 function NotificationsPanel({ theme = 'dark' }) {
   const { user } = useAuth();
   const isLight = theme === 'light';
-  const lightClass = isLight ? ' np-light' : '';
-  const seeAllPath = user?.role === 'buyer' ? '/buyer/notifications' : '/notifications';
+  const isAdmin = theme === 'admin';
+  const lightClass = isLight ? ' np-light' : isAdmin ? ' np-admin' : '';
+  const seeAllPath = user?.role === 'buyer'
+    ? '/buyer/notifications'
+    : user?.role === 'admin'
+      ? '/admin/notifications'
+      : '/notifications';
 
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);

@@ -81,7 +81,10 @@ function UserMenu({ theme = 'dark', roleOverride = null }) {
           <button
             type="button"
             className="um-menu-item"
-            onClick={() => { setOpen(false); navigate('/settings'); }}
+            onClick={() => {
+              setOpen(false);
+              navigate(user?.role === 'admin' ? '/admin/settings' : '/settings');
+            }}
           >
             <IconSettings />
             <span>Paramètres</span>

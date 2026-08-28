@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getAvatarUrl } from '../services/api';
 import { IconProfile, IconSettings, IconLogout } from './DashboardIcons';
 import './UserMenu.css';
 
@@ -49,7 +50,11 @@ function UserMenu({ theme = 'dark', roleOverride = null }) {
   return (
     <div className="um-wrap">
       <button className={`ud-nav-item-full um-trigger${themeClass}`} type="button" onClick={toggleOpen} ref={btnRef}>
-        <span className="um-avatar">{initials}</span>
+        {user?.avatarPath ? (
+          <img src={getAvatarUrl(user.avatarPath)} alt="Avatar" className="um-avatar-img" />
+        ) : (
+          <span className="um-avatar">{initials}</span>
+        )}
         <span className="um-info">
           <strong>{user?.name || 'Utilisateur'}</strong>
           <small>{roleOverride || (user?.role === 'vendor' ? 'Vendeur' : 'Acheteur')}</small>

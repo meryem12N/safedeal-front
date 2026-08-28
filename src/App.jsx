@@ -70,8 +70,22 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/dashboard/vendor" element={<VendorDashboard />} />
-        <Route path="/dashboard/buyer" element={<BuyerDashboard />} />
+        <Route
+          path="/dashboard/vendor"
+          element={
+            <ProtectedRoute>
+              <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer"
+          element={
+            <ProtectedRoute>
+              <BuyerDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/buyer/transactions"
           element={

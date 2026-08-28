@@ -96,6 +96,15 @@
   padding-bottom: 22px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
+
+.tl-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  padding-left: 24px;
+  border-left: 1px solid rgba(255,255,255,0.07);
+}
 .tl-card-product {
   display: flex;
   align-items: center;
@@ -340,7 +349,7 @@
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  margin-left: 20px;
+  margin-left: 16px;
   transition: background 0.15s ease;
 }
 

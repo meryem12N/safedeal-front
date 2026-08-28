@@ -148,3 +148,10 @@
   color: #3D6BFF;
   font-weight: 600;
 }
+.um-avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}

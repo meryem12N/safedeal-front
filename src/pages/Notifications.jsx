@@ -58,6 +58,7 @@ function Notifications() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const isVendor = user?.role === 'vendor';
+  const dashboardPath = user?.role === 'admin' ? '/admin/dashboard' : isVendor ? '/dashboard/vendor' : '/dashboard/buyer';
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,7 +70,7 @@ function Notifications() {
   }, []);
 
   const NAV_ITEMS = [
-    { Icon: IconHome, label: 'Dashboard', path: isVendor ? '/dashboard/vendor' : '/dashboard/buyer' },
+    { Icon: IconHome, label: 'Dashboard', path: dashboardPath },
     { Icon: IconWallet, label: 'Finance', path: null },
     { Icon: IconDispute, label: 'Litiges', path: isVendor ? '/disputes' : null },
   ];
@@ -118,7 +119,7 @@ function Notifications() {
             className="ud-nav-item-full"
             style={{ animationDelay: '0.1s' }}
             type="button"
-            onClick={() => navigate(isVendor ? '/dashboard/vendor' : '/dashboard/buyer')}
+            onClick={() => navigate(dashboardPath)}
           >
             <IconHome /> <span>Dashboard</span>
           </button>
@@ -137,7 +138,7 @@ function Notifications() {
           ))}
         </nav>
 
-        <UserMenu />
+        <UserMenu roleOverride={user?.role === 'admin' ? 'Administrateur' : undefined} />
       </aside>
 
       <main className="ud-main-full">

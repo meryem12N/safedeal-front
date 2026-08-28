@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { changePassword } from '../services/profileService';
 import { IconBell, IconSettings, IconCheck, IconShield } from '../components/DashboardIcons';
 import UserMenu from '../components/UserMenu';
 import NotificationsPanel from '../components/NotificationsPanel';
@@ -99,14 +100,15 @@ function BuyerSettings() {
 
     setSavingPassword(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      await changePassword({ currentPassword, newPassword });
       setPasswordSuccess(true);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setTimeout(() => setPasswordSuccess(false), 2500);
-    } catch {
-      setPasswordError('Impossible de mettre à jour le mot de passe.');
+    } catch (err) {
+      const message = err?.response?.data?.message;
+      setPasswordError(message || 'Impossible de mettre à jour le mot de passe.');
     } finally {
       setSavingPassword(false);
     }

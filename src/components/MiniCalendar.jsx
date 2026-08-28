@@ -1,32 +1,69 @@
+import { useState } from 'react';
 import { IconChevronLeft, IconChevronRight } from './DashboardIcons';
-import { calendarEvents, CURRENT_MONTH_LABEL } from '../mocks/mockDashboard';
 
 const WEEKDAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const MONTH_LABELS = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+];
 
-function buildJuly2026Grid() {
-  // Juillet 2026 commence un mercredi
-  const leadingPrev = [29, 30];
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const trailingNext = [1, 2];
-  const all = [...leadingPrev.map((d) => ({ d, muted: true })), ...days.map((d) => ({ d, muted: false })), ...trailingNext.map((d) => ({ d, muted: true }))];
+function buildMonthGrid(year, month) {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startWeekday = (firstDay.getDay() + 6) % 7; // lundi = 0
+  const daysInMonth = lastDay.getDate();
+
+  const prevMonthLastDay = new Date(year, month, 0).getDate();
+  const leading = Array.from({ length: startWeekday }, (_, i) => ({
+    d: prevMonthLastDay - startWeekday + i + 1,
+    muted: true,
+  }));
+  const current = Array.from({ length: daysInMonth }, (_, i) => ({ d: i + 1, muted: false }));
+  const totalSoFar = leading.length + current.length;
+  const trailingCount = (7 - (totalSoFar % 7)) % 7;
+  const trailing = Array.from({ length: trailingCount }, (_, i) => ({ d: i + 1, muted: true }));
+
+  const all = [...leading, ...current, ...trailing];
   const rows = [];
   for (let i = 0; i < all.length; i += 7) rows.push(all.slice(i, i + 7));
   return rows;
 }
 
 export default function MiniCalendar() {
-  const rows = buildJuly2026Grid();
-  const today = 20;
-  const todaysEvents = calendarEvents[today] || [];
+  const now = new Date();
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth());
+
+  const rows = buildMonthGrid(viewYear, viewMonth);
+  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+  const today = now.getDate();
+
+  const goPrevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
+  };
+
+  const goNextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
+  };
 
   return (
     <div className="ud-calendar-card">
       <div className="ud-calendar-head">
         <h3>Calendrier</h3>
         <div className="ud-calendar-nav">
-          <button><IconChevronLeft /></button>
-          <span>{CURRENT_MONTH_LABEL}</span>
-          <button><IconChevronRight /></button>
+          <button type="button" onClick={goPrevMonth}><IconChevronLeft /></button>
+          <span>{MONTH_LABELS[viewMonth]} {viewYear}</span>
+          <button type="button" onClick={goNextMonth}><IconChevronRight /></button>
         </div>
       </div>
 
@@ -35,21 +72,10 @@ export default function MiniCalendar() {
         {rows.flat().map((cell, i) => (
           <span
             key={i}
-            className={`ud-calendar-day ${cell.muted ? 'ud-cal-muted' : ''} ${cell.d === today && !cell.muted ? 'ud-cal-today' : ''}`}
+            className={`ud-calendar-day ${cell.muted ? 'ud-cal-muted' : ''} ${cell.d === today && !cell.muted && isCurrentMonth ? 'ud-cal-today' : ''}`}
           >
             {cell.d}
           </span>
-        ))}
-      </div>
-
-      <div className="ud-calendar-events">
-        <span className="ud-calendar-events-count">{todaysEvents.length} événements aujourd'hui</span>
-        {todaysEvents.map((e) => (
-          <div key={e.id} className="ud-calendar-event-row">
-            <span className="ud-calendar-event-dot" />
-            <span className="ud-calendar-event-title">{e.title}</span>
-            <span className="ud-calendar-event-time">{e.time}</span>
-          </div>
         ))}
       </div>
     </div>

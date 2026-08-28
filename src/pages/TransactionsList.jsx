@@ -10,6 +10,7 @@ import {
 import ProductIcon from '../components/ProductIcon';
 import RatingStars from '../components/RatingStars';
 import { getTransactions } from '../services/transactionService';
+import api from '../services/api';
 import iphoneImg from '../assets/products/iphone16.jpg';
 import sacImg from '../assets/products/sac-zara.jpg';
 import ps5Img from '../assets/products/ps5.jpg';
@@ -98,6 +99,7 @@ const TRANSACTION_STATUS_CLASS = {
   resolved: 'ud-status-success',
   refunded: 'ud-status-cancelled',
 };
+
 const TRANSACTION_STATUS_LABEL = {
   pending_payment: 'En attente de paiement',
   payment_received: 'Paiement reçu',
@@ -148,6 +150,12 @@ function TransactionsList() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [shippingModalTx, setShippingModalTx] = useState(null);
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [carrier, setCarrier] = useState('');
+  const [shippingSubmitting, setShippingSubmitting] = useState(false);
+  const [shippingError, setShippingError] = useState('');
+  const [releasingId, setReleasingId] = useState(null);
 
   const handleCopyLink = async (t) => {
     const token = t.token || t.id;
@@ -157,15 +165,70 @@ function TransactionsList() {
       setCopiedId(t.id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      
+      // silently fail
     }
   };
 
   const firstName = user?.name?.split(' ')[0] || 'Vendeur';
 
+  const openShippingModal = (transaction) => {
+    setShippingModalTx(transaction);
+    setTrackingNumber('');
+    setCarrier('');
+    setShippingError('');
+  };
+
+  const closeShippingModal = () => {
+    setShippingModalTx(null);
+  };
+
+  const handleReleaseFunds = async (transactionId) => {
+    setReleasingId(transactionId);
+    try {
+      const { data } = await api.post(`/transactions/${transactionId}/close`);
+      setTransactions((current) =>
+        current.map((t) => (t.id === transactionId ? { ...t, status: data?.data?.status || 'closed' } : t))
+      );
+    } catch (err) {
+      alert(err?.response?.data?.message || "Impossible de libérer les fonds pour le moment.");
+    } finally {
+      setReleasingId(null);
+    }
+  };
+
+  const handleConfirmShipping = async (event) => {
+    event.preventDefault();
+    setShippingError('');
+
+    if (!trackingNumber.trim()) {
+      setShippingError('Veuillez renseigner un numéro de suivi.');
+      return;
+    }
+
+    setShippingSubmitting(true);
+
+    try {
+      const { data } = await api.post(`/transactions/${shippingModalTx.id}/ship`, {
+        trackingNumber,
+        carrier,
+      });
+
+      setTransactions((current) =>
+        current.map((t) =>
+          t.id === shippingModalTx.id ? { ...t, status: data?.data?.status || 'in_shipping' } : t
+        )
+      );
+      closeShippingModal();
+    } catch (err) {
+      const message = err?.response?.data?.message;
+      setShippingError(message || "Impossible de marquer la transaction comme expédiée pour le moment.");
+    } finally {
+      setShippingSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
 
     const fetchTransactions = async () => {
       try {
@@ -184,6 +247,11 @@ function TransactionsList() {
     fetchTransactions();
     return () => { isMounted = false; };
   }, [page]);
+
+  const changePage = (updater) => {
+    setLoading(true);
+    setPage(updater);
+  };
 
   const ACTIVE_STATUSES = ['pending_payment', 'payment_received', 'in_shipping'];
 
@@ -255,7 +323,6 @@ function TransactionsList() {
         </div>
 
         <div className="ud-body-full">
-          
 
           <div className="tl-filters-row">
             <div className="tl-search-shell">
@@ -304,6 +371,7 @@ function TransactionsList() {
                 return (
                   <div key={t.id} className="tl-card" style={{ animationDelay: `${i * 0.06}s` }}>
                     <div className="tl-card-top">
+
                       <div className="tl-card-product">
                         {TX_IMAGES[resolveProductCategory(t.title)] ? (
                           <img
@@ -337,28 +405,46 @@ function TransactionsList() {
                         <strong>{formatTransactionDate(t.createdAt)}</strong>
                       </div>
 
-                      <button
-                        type="button"
-                        className="tl-copy-link-btn"
-                        onClick={() => handleCopyLink(t)}
-                      >
-                        {copiedId === t.id ? (
-                          <>
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
-                              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Copié !
-                          </>
-                        ) : (
-                          <>
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
-                              <rect x="9" y="9" width="12" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
-                              <path d="M6 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V6" stroke="currentColor" strokeWidth="1.8" />
-                            </svg>
-                            Copier le lien
-                          </>
+                      <div className="tl-card-actions">
+                        {t.status === 'payment_received' && (
+                          <button type="button" className="ud-ship-btn" onClick={() => openShippingModal(t)}>
+                            Marquer comme expédié
+                          </button>
                         )}
-                      </button>
+                        {t.status === 'delivered' && (
+                          <button
+                            type="button"
+                            className="ud-ship-btn"
+                            onClick={() => handleReleaseFunds(t.id)}
+                            disabled={releasingId === t.id}
+                          >
+                            {releasingId === t.id ? 'Libération...' : 'Libérer les fonds'}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="tl-copy-link-btn"
+                          onClick={() => handleCopyLink(t)}
+                        >
+                          {copiedId === t.id ? (
+                            <>
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              Copié !
+                            </>
+                          ) : (
+                            <>
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                                <rect x="9" y="9" width="12" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+                                <path d="M6 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V6" stroke="currentColor" strokeWidth="1.8" />
+                              </svg>
+                              Copier le lien
+                            </>
+                          )}
+                        </button>
+                      </div>
+
                     </div>
 
                     {!isSpecial && (
@@ -400,7 +486,7 @@ function TransactionsList() {
                 type="button"
                 className="tl-page-nav-btn"
                 disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
+                onClick={() => changePage((p) => p - 1)}
                 aria-label="Page précédente"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
@@ -413,7 +499,7 @@ function TransactionsList() {
                   key={p}
                   type="button"
                   className={`tl-page-num ${p === page ? 'tl-page-num--active' : ''}`}
-                  onClick={() => setPage(p)}
+                  onClick={() => changePage(p)}
                 >
                   {p}
                 </button>
@@ -423,7 +509,7 @@ function TransactionsList() {
                 type="button"
                 className="tl-page-nav-btn"
                 disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => changePage((p) => p + 1)}
                 aria-label="Page suivante"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
@@ -432,9 +518,68 @@ function TransactionsList() {
               </button>
             </div>
           )}
-        
+
         </div>
       </main>
+
+      {shippingModalTx && (
+        <div className="ud-modal-overlay" onClick={closeShippingModal}>
+          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ud-modal-head">
+              <div>
+                <h3>Marquer comme expédié</h3>
+                <p>{shippingModalTx.title}</p>
+              </div>
+              <button className="ud-modal-close" type="button" onClick={closeShippingModal}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmShipping} className="ud-modal-form">
+              <div className="ud-field-group">
+                <label className="ud-field-label" htmlFor="tl-tracking">Numéro de suivi</label>
+                <div className="ud-input-shell">
+                  <input
+                    id="tl-tracking"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    className="ud-form-input"
+                    placeholder="Ex. AMZ-98231-MA"
+                    disabled={shippingSubmitting}
+                  />
+                </div>
+              </div>
+
+              <div className="ud-field-group">
+                <label className="ud-field-label" htmlFor="tl-carrier">Transporteur (optionnel)</label>
+                <div className="ud-input-shell">
+                  <input
+                    id="tl-carrier"
+                    value={carrier}
+                    onChange={(e) => setCarrier(e.target.value)}
+                    className="ud-form-input"
+                    placeholder="Ex. Amana, CTM, Sud Express..."
+                    disabled={shippingSubmitting}
+                  />
+                </div>
+              </div>
+
+              {shippingError && <div className="ud-form-error">{shippingError}</div>}
+
+              <div className="ud-modal-actions">
+                <button type="button" className="ud-modal-cancel" onClick={closeShippingModal} disabled={shippingSubmitting}>
+                  Annuler
+                </button>
+                <button type="submit" className="ud-new-btn-full ud-form-submit" disabled={shippingSubmitting}>
+                  {shippingSubmitting ? 'Envoi...' : "Confirmer l'expédition"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

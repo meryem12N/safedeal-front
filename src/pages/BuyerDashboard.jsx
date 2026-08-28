@@ -212,10 +212,7 @@ function BuyerDashboard() {
   const currentOrder = transactions.find((t) => activeStatuses.includes(t.status)) || null;
   const recentTransactions = transactions.slice(0, 4);
 
-  const getToken = (t) => {
-    console.log('DEBUG BUYER TX:', t);
-    return t?.token || t?.id;
-  };
+  const getToken = (t) => t?.token || t?.id;
 
   return (
     <div className={`bd-page ${mounted ? 'bd-mounted' : ''}`}>
@@ -339,7 +336,7 @@ function BuyerDashboard() {
                         <span className={`bd-status-pill bd-status-pill--${TX_STATUS_VARIANT[tx.status] || 'pending'}`}>
                           {TX_STATUS_LABEL[tx.status] || tx.status}
                         </span>
-                        <time>{formatDate(tx.created_at)}</time>
+                        <time>{formatDate(tx.createdAt)}</time>
                         <strong className="bd-history-amount">{formatAmount(tx.amount, tx.currency)}</strong>
                         <button
                           type="button"

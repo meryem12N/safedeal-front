@@ -6,21 +6,18 @@ import UserMenu from '../components/UserMenu';
 import SidebarTransactionsMenu from '../components/SidebarTransactionsMenu';
 import { useAuth } from '../context/AuthContext';
 import {
-  IconHome, IconBox, IconWallet, IconDispute, IconProfile, IconSettings, IconLogout,
+  IconHome, IconBox, IconWallet, IconDispute, IconSettings,
   IconSearch, IconBell, IconDollar, IconBag,
-  IconChevronDown, IconMore, IconArrowTrendUp, IconCheck, IconLock, IconTruck, IconPackageBox,
+  IconChevronDown, IconMore, IconArrowTrendUp, IconTruck,
 } from '../components/DashboardIcons';
 import ProductIcon from '../components/ProductIcon';
 import RatingStars from '../components/RatingStars';
-import { overviewData, revenueSpark, ordersSpark, profitSpark, activityFeed } from '../mocks/mockDashboard';
+import { revenueSpark, ordersSpark, profitSpark } from '../mocks/mockDashboard';
 import { getTransactions } from '../services/transactionService';
+import { getVendorDashboard } from '../services/dashboardService';
 import './Dashboard.css';
-import iphoneImg from '../assets/products/iphone16.jpg';
-import sacImg from '../assets/products/sac-zara.jpg';
-import ps5Img from '../assets/products/ps5.jpg';
 import MiniCalendar from '../components/MiniCalendar';
 import { useNavigate } from 'react-router-dom';
-import NotificationsPanel from '../components/NotificationsPanel';
 
 
 
@@ -87,50 +84,18 @@ function FullGauge({ value, label, trendText }) {
     </div>
   );
 }
-const VENDOR_STEPS = ['Payé', 'Séquestré', 'À expédier', 'Expédié', 'Livré'];
-
-const vendorOrdersToProcess = [
-  { id: 1, name: 'iPhone 16 Pro', orderNumber: 'AMZ-98231', image: iphoneImg, currentStep: 2, status: 'action', deliveryDate: '24 Juil 2026' },
-  { id: 2, name: 'Sac à main Zara', orderNumber: 'ZAR-44120', image: sacImg, currentStep: 1, status: 'sequestre', deliveryDate: '26 Juil 2026' },
-  { id: 3, name: 'Console PS5', orderNumber: 'PS5-77012', image: ps5Img, currentStep: 3, status: 'transit', deliveryDate: '23 Juil 2026' },
-];
-
-const VENDOR_STATUS_PILL = {
-  action: { label: 'À expédier', className: 'ud-tracking-status--preparation' },
-  sequestre: { label: 'Séquestré', className: 'ud-tracking-status--sequestre' },
-  transit: { label: 'En transit', className: 'ud-tracking-status--transit' },
-};
-
-const VENDOR_STEP_ICONS = [IconCheck, IconLock, IconPackageBox, IconTruck, IconCheck];
-
-function VendorTrackingSteps({ currentStep }) {
-  const fillPercent = (currentStep / (VENDOR_STEPS.length - 1)) * 100;
-  return (
-    <div className="ud-tracking-steps">
-      <div className="ud-tracking-steps-fill" style={{ width: `${fillPercent}%` }} />
-      {VENDOR_STEPS.map((label, i) => {
-        const state = i < currentStep ? 'done' : i === currentStep ? 'current' : 'pending';
-        const StepIcon = VENDOR_STEP_ICONS[i];
-        return (
-          <div key={label} className="ud-tracking-step">
-            <div className={`ud-tracking-step-icon ud-tracking-step-icon--${state}`}>
-              {state === 'current' ? <span className="ud-tracking-dot" /> : <StepIcon />}
-            </div>
-            <span className="ud-tracking-step-label">{label}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 const NAV_ITEMS = [
   { Icon: IconHome, active: true, label: 'Dashboard', path: '/dashboard/vendor' },
   { Icon: IconDispute, label: 'Litiges', path: '/disputes' },
 ];
 
-const STATUS_LABEL = { success: 'Réussi', pending: 'En cours' };
-const ACTIVITY_ICON = { order: IconBox, payment: IconWallet, vendor: IconProfile, stock: IconBag };
-const ACTIVITY_COLOR = { order: '#3D6BFF', payment: '#18D26E', vendor: '#FFC857', stock: '#8B5CF6' };
+const PERIOD_OPTIONS = [
+  { label: 'Jour', value: '1d' },
+  { label: 'Semaine', value: '7d' },
+  { label: 'Mois', value: '30d' },
+  { label: 'Année', value: '12m' },
+];
+
 const TRANSACTION_STATUS_CLASS = {
   pending_payment: 'ud-status-pending',
   payment_received: 'ud-status-pending',
@@ -183,15 +148,14 @@ function formatTransactionDate(createdAt) {
 }
 
 function VendorDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const [period, setPeriod] = useState('Mois');
+  const [period, setPeriod] = useState('7d');
   const [transactions, setTransactions] = useState([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [shippingModalTx, setShippingModalTx] = useState(null);
-  const [releasingId, setReleasingId] = useState(null);
   const [trackingNumber, setTrackingNumber] = useState('');
   const [carrier, setCarrier] = useState('');
   const [shippingSubmitting, setShippingSubmitting] = useState(false);
@@ -202,6 +166,29 @@ function VendorDashboard() {
     const t2 = setTimeout(() => setMounted(true), 950);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
+  const [dashboard, setDashboard] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    getVendorDashboard(period, { signal: controller.signal })
+      .then((data) => { if (isMounted) setDashboard(data); })
+      .catch(() => { if (isMounted) setDashboard(null); })
+      .finally(() => { if (isMounted) setDashboardLoading(false); });
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [period]);
+
+  const changePeriod = (p) => {
+    setDashboardLoading(true);
+    setPeriod(p);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -214,7 +201,7 @@ function VendorDashboard() {
         if (isMounted) {
           setTransactions(Array.isArray(response?.data) ? response.data : []);
         }
-      } catch (error) {
+      } catch {
         if (isMounted) {
           setTransactions([]);
         }
@@ -234,29 +221,8 @@ function VendorDashboard() {
 
   const firstName = user?.name?.split(' ')[0] || 'Vendeur';
 
-  const openShippingModal = (transaction) => {
-    setShippingModalTx(transaction);
-    setTrackingNumber('');
-    setCarrier('');
-    setShippingError('');
-  };
-
   const closeShippingModal = () => {
     setShippingModalTx(null);
-  };
-
-  const handleReleaseFunds = async (transactionId) => {
-    setReleasingId(transactionId);
-    try {
-      const { data } = await api.post(`/transactions/${transactionId}/close`);
-      setTransactions((current) =>
-        current.map((t) => (t.id === transactionId ? { ...t, status: data?.data?.status || 'closed' } : t))
-      );
-    } catch (err) {
-      alert(err?.response?.data?.message || "Impossible de libérer les fonds pour le moment.");
-    } finally {
-      setReleasingId(null);
-    }
   };
 
   const handleConfirmShipping = async (event) => {
@@ -371,9 +337,9 @@ function VendorDashboard() {
           ) : (
             <>
         <div className="ud-topstats-row">
-  <StatCard icon={IconDollar} label="Revenus totaux" value="80 440 MAD" trend="8% vs mois dernier" spark={revenueSpark} sparkColor="#3D6BFF" iconVariant="blue" delay={0} />
-  <StatCard icon={IconWallet} label="Bénéfices" value="21 440 MAD" trend="18% vs mois dernier" spark={profitSpark} sparkColor="#A78BFA" iconVariant="purple" delay={0.08} />
-  <StatCard icon={IconBag} label="Commandes" value="142" trend="12% vs mois dernier" spark={ordersSpark} sparkColor="#E8C572" iconVariant="gold" delay={0.16} />
+  <StatCard icon={IconDollar} label="Revenus totaux" value={dashboardLoading ? '…' : formatTransactionAmount(dashboard?.releasedRevenue, dashboard?.currency)} trend={`${dashboard?.inTransit ?? 0} en transit`} spark={revenueSpark} sparkColor="#3D6BFF" iconVariant="blue" delay={0} />
+  <StatCard icon={IconWallet} label="Bénéfices nets" value={dashboardLoading ? '…' : formatTransactionAmount(dashboard?.netRevenue, dashboard?.currency)} trend={`Commission: ${formatTransactionAmount(dashboard?.commissionPaid, dashboard?.currency)}`} spark={profitSpark} sparkColor="#A78BFA" iconVariant="purple" delay={0.08} />
+  <StatCard icon={IconBag} label="Commandes" value={dashboardLoading ? '…' : (dashboard?.totalOrders ?? 0)} trend={`${dashboard?.awaitingShipment ?? 0} à expédier`} spark={ordersSpark} sparkColor="#E8C572" iconVariant="gold" delay={0.16} />
 </div>
 
 <div className="ud-main-grid ud-entrance-fade" style={{ animationDelay: '0.3s' }}>
@@ -384,14 +350,20 @@ function VendorDashboard() {
         <div className="ud-period-group">
           <span className="ud-filter-pill">Cette année <IconChevronDown /></span>
           <div className="ud-period-toggle">
-            {['Jour', 'Semaine', 'Mois', 'Année'].map((p) => (
-              <button key={p} className={period === p ? 'active' : ''} onClick={() => setPeriod(p)}>{p}</button>
+            {PERIOD_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                className={period === opt.value ? 'active' : ''}
+                onClick={() => changePeriod(opt.value)}
+              >
+                {opt.label}
+              </button>
             ))}
           </div>
         </div>
       </div>
       <ResponsiveContainer width="100%" height={280}>
-        <AreaChart data={overviewData}>
+        <AreaChart data={dashboard?.salesSeries || []}>
           <defs>
             <linearGradient id="ventesGradFull" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#3D6BFF" stopOpacity={0.5} />
@@ -399,10 +371,10 @@ function VendorDashboard() {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-          <XAxis dataKey="day" tick={{ fontSize: 12.5, fill: '#6677A8' }} axisLine={false} tickLine={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 12.5, fill: '#6677A8' }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 12.5, fill: '#6677A8' }} axisLine={false} tickLine={false} />
           <Tooltip contentStyle={{ background: '#162448', border: '1px solid rgba(61,107,255,0.3)', borderRadius: 12, fontSize: 13, color: 'white' }} />
-          <Area type="monotone" dataKey="ventes" stroke="#3D6BFF" strokeWidth={3} fill="url(#ventesGradFull)" isAnimationActive animationDuration={1500} animationEasing="ease-out" dot={<GlowDot />} />
+          <Area type="monotone" dataKey="value" stroke="#3D6BFF" strokeWidth={3} fill="url(#ventesGradFull)" isAnimationActive animationDuration={1500} animationEasing="ease-out" dot={<GlowDot />} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -410,25 +382,26 @@ function VendorDashboard() {
     <div className="ud-table-card">
       <div className="ud-table-head-bar">
         <h3>Commandes à traiter</h3>
-        <span className="ud-see-all-text">Voir tout</span>
+        <Link to="/transactions?status=payment_received" className="ud-see-all-text">Voir tout</Link>
       </div>
       <div className="ud-tracking-list">
-        {vendorOrdersToProcess.map((o, i) => (
-          <div key={o.id} className="ud-tracking-row" style={{ animationDelay: `${0.4 + i * 0.08}s` }}>
-            <img src={o.image} alt={o.name} className="ud-tracking-thumb" />
-            <div className="ud-tracking-info">
-              <span className="ud-tracking-name">{o.name}</span>
-              <span className="ud-tracking-order">Commande #{o.orderNumber}</span>
-            </div>
-            <VendorTrackingSteps currentStep={o.currentStep} />
-            <div className="ud-tracking-right">
-              <span className={`ud-tracking-status ${VENDOR_STATUS_PILL[o.status].className}`}>
-                {VENDOR_STATUS_PILL[o.status].label}
+        {(dashboard?.ordersToProcess || []).length === 0 ? (
+          <p className="ud-empty">Aucune commande à traiter pour le moment.</p>
+        ) : (
+          dashboard.ordersToProcess.slice(0, 4).map((o, i) => (
+            <div key={o.id} className="ud-tracking-row" style={{ animationDelay: `${0.4 + i * 0.08}s`, cursor: 'pointer' }} onClick={() => navigate(`/pay/${o.token}`)}>
+              <ProductIcon category={resolveProductCategory(o.title)} color="#7C93FF" />
+              <div className="ud-tracking-info">
+                <span className="ud-tracking-name">{o.title}</span>
+                <span className="ud-tracking-order">Acheteur : {o.buyerName}</span>
+              </div>
+              <span className={`ud-tracking-status ${TRANSACTION_STATUS_CLASS[o.status] || 'ud-status-pending'}`}>
+                {TRANSACTION_STATUS_LABEL[o.status] || o.status}
               </span>
-              <span className="ud-tracking-delivery">Livraison prévue<br />{o.deliveryDate}</span>
+              <strong className="ud-td-total">{formatTransactionAmount(o.amount, o.currency)}</strong>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   </div>
@@ -444,7 +417,7 @@ function VendorDashboard() {
         <h3>Performance</h3>
         <span className="ud-see-all"><IconMore /></span>
       </div>
-      <FullGauge value={98} label="Taux de réussite" trendText="14% vs mois dernier" />
+      <FullGauge value={dashboard?.successRate ?? 0} label="Taux de réussite" trendText={`${dashboard?.finishedOrders ?? 0} commandes terminées`} />
     </div>
 
     <div className="ud-solde-wrap">
@@ -460,7 +433,7 @@ function VendorDashboard() {
             </div>
             <div className="ud-solde-text">
               <span className="ud-solde-label">Solde total</span>
-              <div className="ud-solde-value">$80,440</div>
+              <div className="ud-solde-value">{formatTransactionAmount(dashboard?.releasedRevenue, dashboard?.currency)}</div>
             </div>
           </div>
           <svg className="ud-solde-chip" viewBox="0 0 40 30" width="42" height="32">
@@ -484,12 +457,12 @@ function VendorDashboard() {
 
         <div className="ud-solde-breakdown">
           <div className="ud-solde-breakdown-item">
-            <span className="ud-solde-breakdown-label">En attente de remboursement</span>
-            <span className="ud-solde-breakdown-value ud-solde-breakdown-value--gold">2 330 MAD</span>
+            <span className="ud-solde-breakdown-label">En séquestre</span>
+            <span className="ud-solde-breakdown-value ud-solde-breakdown-value--gold">{formatTransactionAmount(dashboard?.inEscrow, dashboard?.currency)}</span>
           </div>
           <div className="ud-solde-breakdown-item">
             <span className="ud-solde-breakdown-label">Total remboursé</span>
-            <span className="ud-solde-breakdown-value ud-solde-breakdown-value--blue">4 850 MAD</span>
+            <span className="ud-solde-breakdown-value ud-solde-breakdown-value--blue">{formatTransactionAmount(dashboard?.refundedTotal, dashboard?.currency)}</span>
           </div>
         </div>
       </div>
@@ -517,10 +490,10 @@ function VendorDashboard() {
                   ) : (
                     <table className="ud-table">
                       <thead>
-                        <tr><th>Produit</th><th>Note</th><th>Montant</th><th>Statut</th><th>Date</th><th>Action</th></tr>
+                        <tr><th>Produit</th><th>Note</th><th>Montant</th><th style={{ textAlign: 'center' }}>Statut</th><th>Date</th></tr>
                       </thead>
                       <tbody>
-                        {transactions.map((t, i) => (
+                        {transactions.slice(0, 3).map((t, i) => (
                           <tr key={t.id} style={{ animationDelay: `${0.5 + i * 0.08}s` }}>
                             <td className="ud-td-product">
                               <ProductIcon category={resolveProductCategory(t.title)} color="#7C93FF" />
@@ -528,31 +501,13 @@ function VendorDashboard() {
                             </td>
                             <td><RatingStars value={5} /></td>
                             <td className="ud-td-total">{formatTransactionAmount(t.amount, t.currency)}</td>
-                            <td>
+                            <td style={{ textAlign: 'center' }}>
                               <span className={`ud-status-pill ${TRANSACTION_STATUS_CLASS[t.status] || 'ud-status-pending'}`}>
                                 {TRANSACTION_STATUS_LABEL[t.status] || t.status}
                               </span>
                             </td>
-                            <td className="ud-td-date">{formatTransactionDate(t.created_at)}</td>
-                            <td>
-                              {t.status === 'payment_received' && (
-                                <button className="ud-ship-btn" type="button" onClick={() => openShippingModal(t)}>
-                                  <IconTruck />
-                                  Marquer comme expédié
-                                </button>
-                              )}
-                              {t.status === 'delivered' && (
-                                <button
-                                  className="ud-ship-btn"
-                                  type="button"
-                                  onClick={() => handleReleaseFunds(t.id)}
-                                  disabled={releasingId === t.id}
-                                >
-                                  <IconCheck />
-                                  {releasingId === t.id ? 'Libération...' : 'Libérer les fonds'}
-                                </button>
-                              )}
-                            </td>
+                            <td className="ud-td-date">{formatTransactionDate(t.createdAt)}</td>
+
                           </tr>
                         ))}
                       </tbody>
@@ -567,23 +522,23 @@ function VendorDashboard() {
                 <div className="ud-activity-card">
                   <div className="ud-table-head-bar">
                     <h3>Activité en temps réel</h3>
-                    <span className="ud-see-all-text">Voir tout</span>
+                    <Link to="/transactions" className="ud-see-all-text">Voir tout</Link>
                   </div>
                   <div className="ud-activity-feed">
-                    {activityFeed.map((a, i) => {
-                      const Icon = ACTIVITY_ICON[a.type];
-                      const color = ACTIVITY_COLOR[a.type];
-                      return (
-                        <div key={a.id} className="ud-activity-feed-row" style={{ animationDelay: `${0.65 + i * 0.07}s` }}>
-                          <span className="ud-activity-feed-icon" style={{ background: `${color}18`, color }}><Icon /></span>
+                    {(dashboard?.activity || []).length === 0 ? (
+                      <p className="ud-empty">Aucune activité récente.</p>
+                    ) : (
+                      dashboard.activity.slice(0, 4).map((a, i) => (
+                        <div key={`${a.transactionId}-${a.createdAt}`} className="ud-activity-feed-row" style={{ animationDelay: `${0.65 + i * 0.07}s` }}>
+                          <span className="ud-activity-feed-icon" style={{ background: '#3D6BFF18', color: '#3D6BFF' }}><IconBox /></span>
                           <div className="ud-activity-feed-info">
                             <span className="ud-activity-feed-title">{a.title}</span>
-                            <span className="ud-activity-feed-desc">{a.desc}</span>
+                            <span className="ud-activity-feed-desc">{a.detail}</span>
                           </div>
-                          <span className="ud-activity-feed-time">{a.time}</span>
+                          <span className="ud-activity-feed-time">{formatTransactionDate(a.createdAt)}</span>
                         </div>
-                      );
-                    })}
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -656,11 +611,5 @@ function VendorDashboard() {
     </div>
   );
 }
-
-const TX_IMAGES = {
-  phone: iphoneImg,
-  bag: sacImg,
-  game: ps5Img,
-};
 
 export default VendorDashboard;

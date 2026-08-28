@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { IconBox, IconWallet, IconDispute, IconCheck, IconSettings } from '../components/DashboardIcons';
+import { IconBox, IconCheck, IconSettings } from '../components/DashboardIcons';
 import UserMenu from '../components/UserMenu';
 import NotificationsPanel from '../components/NotificationsPanel';
+import { getNotifications, markAllRead as markAllReadApi } from '../services/notificationService';
 import './BuyerDashboard.css';
 import './BuyerNotifications.css';
 
@@ -40,55 +41,37 @@ const NAV_ITEMS = [
   { Icon: IconDisputeNav, label: 'Litiges', path: '/buyer/disputes' },
 ];
 
-const ALL_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: 'payment',
-    title: 'Paiement reçu',
-    desc: 'Votre paiement pour "iPhone 15 Pro" a été confirmé et séquestré en toute sécurité.',
-    time: 'Il y a 12 min',
-    unread: true,
-  },
-  {
-    id: 2,
-    type: 'dispute',
-    title: 'Réponse du vendeur',
-    desc: 'Le vendeur a répondu à votre litige sur la commande #TRX-000001. Consultez sa réponse.',
-    time: 'Il y a 1h',
-    unread: true,
-  },
-  {
-    id: 3,
-    type: 'transaction',
-    title: 'Commande expédiée',
-    desc: 'Le vendeur a expédié votre commande "AirPods Pro". Suivez la livraison depuis votre tableau de bord.',
-    time: 'Hier',
-    unread: false,
-  },
-  {
-    id: 4,
-    type: 'transaction',
-    title: 'Commande confirmée',
-    desc: 'Vous avez confirmé la réception de "PS5 Console". Le paiement a été libéré au vendeur.',
-    time: 'Il y a 2 jours',
-    unread: false,
-  },
-];
-
-const NOTIF_ICON = { payment: IconWallet, dispute: IconDispute, transaction: IconBox };
-const NOTIF_COLOR = {
-  payment: { bg: 'rgba(22, 179, 104, 0.10)', color: '#16B368' },
-  dispute: { bg: 'rgba(224, 64, 63, 0.10)', color: '#E0403F' },
-  transaction: { bg: 'rgba(61, 107, 255, 0.10)', color: '#3D6BFF' },
-};
+function formatNotifTime(iso) {
+  if (!iso) return '';
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const hours = Math.floor(diffMs / 3600000);
+  if (hours < 1) return "à l'instant";
+  if (hours < 24) return `Il y a ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return days === 1 ? 'Hier' : `Il y a ${days} jours`;
+}
 
 function BuyerNotifications() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState(ALL_NOTIFICATIONS);
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const markAllRead = () => {
-    setNotifications((current) => current.map((n) => ({ ...n, unread: false })));
+  useEffect(() => {
+    getNotifications()
+      .then((data) => setNotifications(Array.isArray(data) ? data : []))
+      .catch(() => setNotifications([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const markAllRead = async () => {
+    try {
+      await markAllReadApi();
+      setNotifications((current) => current.map((n) => ({ ...n, isRead: true })));
+    } catch {
+      // silencieux
+    }
   };
 
   return (
@@ -155,25 +138,20 @@ function BuyerNotifications() {
             </div>
           ) : (
             <div className="bnt-list">
-              {notifications.map((n, i) => {
-                const Icon = NOTIF_ICON[n.type];
-                const colors = NOTIF_COLOR[n.type];
-                return (
-                  <div key={n.id} className={`bnt-card ${n.unread ? 'bnt-card--unread' : ''}`} style={{ animationDelay: `${i * 0.05}s` }}>
-                    <span className="bnt-card-icon" style={{ background: colors.bg, color: colors.color }}>
-                      <Icon />
-                    </span>
-                    <div className="bnt-card-content">
-                      <div className="bnt-card-top">
-                        <strong>{n.title}</strong>
-                        {n.unread && <span className="bnt-dot" />}
-                      </div>
-                      <p>{n.desc}</p>
-                      <span className="bnt-card-time">{n.time}</span>
+              {notifications.map((n, i) => (
+                <div key={n.id} className={`bnt-card ${!n.isRead ? 'bnt-card--unread' : ''}`} style={{ animationDelay: `${i * 0.05}s` }}>
+                  <span className="bnt-card-icon" style={{ background: 'rgba(61, 107, 255, 0.10)', color: '#3D6BFF' }}>
+                    <IconBox />
+                  </span>
+                  <div className="bnt-card-content">
+                    <div className="bnt-card-top">
+                      {!n.isRead && <span className="bnt-dot" />}
                     </div>
+                    <p>{n.message}</p>
+                    <span className="bnt-card-time">{formatNotifTime(n.createdAt)}</span>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>

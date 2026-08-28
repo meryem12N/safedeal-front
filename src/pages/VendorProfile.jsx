@@ -230,15 +230,15 @@ function VendorProfile() {
                 </span>
                 <div>
                   <span className="pf-stat-label">Réputation</span>
-                  <strong className="pf-stat-value">{Number(user?.reputation_score ?? 0).toFixed(2)}</strong>
+                  <strong className="pf-stat-value">{Number(user?.reputationScore ?? 0).toFixed(2)}</strong>
                 </div>
               </div>
               <div className="pf-stat">
                 <span className="pf-stat-icon pf-stat-icon--green"><IconShield /></span>
                 <div>
                   <span className="pf-stat-label">Identité</span>
-                  <strong className={`pf-stat-value ${user?.identity_status === 'approved' ? 'pf-stat-value--ok' : 'pf-stat-value--warning'}`}>
-                    {user?.identity_status === 'approved' ? 'Vérifiée' : 'À vérifier'}
+                  <strong className={`pf-stat-value ${user?.identityStatus === 'approved' ? 'pf-stat-value--ok' : 'pf-stat-value--warning'}`}>
+                    {user?.identityStatus === 'approved' ? 'Vérifiée' : 'À vérifier'}
                   </strong>
                 </div>
               </div>
@@ -372,7 +372,7 @@ function VendorProfile() {
                 <div className="pf-activity-row">
                   <span className="pf-activity-icon pf-activity-icon--gold"><IconVerify /></span>
                   <span className="pf-activity-label">Vérifications en cours</span>
-                  <span className="pf-activity-value">{user?.identity_status === 'approved' ? '0' : '1'}</span>
+                  <span className="pf-activity-value">{user?.identityStatus === 'approved' ? '0' : '1'}</span>
                 </div>
               </div>
             </div>

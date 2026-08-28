@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getAvatarUrl } from '../services/api';
+import { updateProfile, uploadAvatar } from '../services/profileService';
 import { IconBell, IconSettings, IconCheck, IconShield } from '../components/DashboardIcons';
 import UserMenu from '../components/UserMenu';
 
@@ -72,7 +74,8 @@ function BuyerProfile() {
   const [infoError, setInfoError] = useState('');
 
 
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null);
+  const [avatarPreview, setAvatarPreview] = useState(getAvatarUrl(user?.avatarPath));
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState('');
 
   const initials = (user?.name || 'U')
@@ -82,7 +85,7 @@ function BuyerProfile() {
     .join('')
     .toUpperCase();
 
-  const handleAvatarChange = (event) => {
+  const handleAvatarChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -96,9 +99,22 @@ function BuyerProfile() {
     }
 
     setAvatarError('');
+    setUploadingAvatar(true);
+
     const reader = new FileReader();
     reader.onload = () => setAvatarPreview(reader.result);
     reader.readAsDataURL(file);
+
+    try {
+      const data = await uploadAvatar(file);
+      const path = data?.path || data?.data?.path;
+      if (setUser) setUser((current) => ({ ...current, avatarPath: path }));
+    } catch (err) {
+      const message = err?.response?.data?.message;
+      setAvatarError(message || "Impossible d'envoyer la photo pour le moment.");
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSaveInfo = async (event) => {
@@ -107,12 +123,13 @@ function BuyerProfile() {
     setInfoSuccess(false);
     setSavingInfo(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      await updateProfile({ name, phone });
       if (setUser) setUser((current) => ({ ...current, name, phone }));
       setInfoSuccess(true);
       setTimeout(() => setInfoSuccess(false), 2500);
-    } catch {
-      setInfoError('Impossible de mettre à jour vos informations.');
+    } catch (err) {
+      const message = err?.response?.data?.message;
+      setInfoError(message || 'Impossible de mettre à jour vos informations.');
     } finally {
       setSavingInfo(false);
     }
